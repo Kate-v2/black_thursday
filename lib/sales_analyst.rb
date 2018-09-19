@@ -299,8 +299,6 @@ class SalesAnalyst
   end
 
   def merchants_ranked_by_revenue
-    # ranked = @merchants.all.sort_by { |merch| revenue_by_merchant(merch.id) }.to_a
-    # ranked = @merchants.all.map { |merch|  }
     ranked = @merchants.all.group_by { |merch| revenue_by_merchant(merch.id) }
     count = ranked.count
     sorted = ranked.max_by(count) { |rev, merch| rev }.to_h
@@ -308,6 +306,11 @@ class SalesAnalyst
   end
 
   def most_sold_item_for_merchant(merchant_id)
+    # merchants -> invoices
+    # invoices -> inv_items
+    # inv_items group by item id
+    # id => [].each -> inject for qty
+    # TO DO - group on item_id; the find count
     merch_invoices = @invoices.find_all_by_merchant_id(merchant_id)
     inv_ids = merch_invoices.map { |inv| inv.id }
     merch_items = inv_ids.map { |id| @invoice_items.find_all_by_invoice_id(id)}.flatten
@@ -331,6 +334,15 @@ class SalesAnalyst
   end
 
   def best_item_for_merchant(merchant_id)
+    # This is only from a single invoice -- group on item id; the count revenue
+    invs = @invoices.find_all_by_merchant_id(merchant_id)
+    inv_items = invs.map { |inv| @invoice_items.find_all_by_invoice_id(inv) }.flatten
+    groups = inv_items.group_by { |item| revenue(item) }
+    max = groups.max_by { |rev, item| rev }
+    max.find_all { |dunno| dunno.class == Item  }
+    # maxes = max.map.with_index { |val, index| [val, max[index + 1]] if index % 2 == 0 }
+    # maxes = maxes.compact.to_h
+    # max = maxes.values
   end
 
 
