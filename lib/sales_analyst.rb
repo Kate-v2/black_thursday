@@ -31,10 +31,6 @@ class SalesAnalyst
     values  = data.inject([]) {|arr, val| arr << val.send(rule_method) }
   end
 
-  # def sum(values)
-  #   sum = values.inject(0) { |total, val| total += val.to_f }
-  # end   # returns an rounded float
-
   # TO DO - Test the method part
   def sum(values, method = nil)
     values.inject(0) { |total, val|
@@ -130,7 +126,8 @@ class SalesAnalyst
 
   def average_item_price_for_merchant(id)
     group = @items.find_all_by_merchant_id(id)
-    total = group.inject(0) { |sum, item| sum += item.unit_price }
+    # total = group.inject(0) { |sum, item| sum += item.unit_price }
+    total = sum(group, :unit_price)
     count = group.count
     mean  = (total / count).round(2)
   end   # returns big decimal
