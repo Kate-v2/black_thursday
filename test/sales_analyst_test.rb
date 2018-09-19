@@ -314,5 +314,19 @@ class SalesAnalystTest < Minitest::Test
     assert_equal 21067.77, revenue
   end
 
+  def test_it_gets_the_top_x_or_20_merchants_by_revenue
+    # --- default count ---
+    top = @sa_csv.top_revenue_earners
+    assert_instance_of Array, top
+    assert_equal 20, top.count
+    assert_instance_of Merchant, top.first
+    # --- custom count ---
+    skip
+    top = @sa_csv.top_revenue_earners(40)
+    assert_instance_of Array, top
+    assert_equal 40, top.count
+    assert_instance_of Merchant, top.first
+  end
+
 
 end
