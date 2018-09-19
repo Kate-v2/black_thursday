@@ -1,8 +1,8 @@
 require_relative 'test_helper'
 
 require_relative '../lib/sales_engine'
-require_relative '../lib/item'
 require_relative '../lib/item_repository'
+require_relative '../lib/item'
 
 
 class ItemRepositoryTest < Minitest::Test
@@ -22,7 +22,7 @@ class ItemRepositoryTest < Minitest::Test
                                       created_at:  "2016-01-11 09:34:06 UTC",
                                       updated_at:  "2007-06-04 21:35:10 UTC"
                                      } }
-    @key = @item_1_hash.keys.first
+    @key    = @item_1_hash.keys.first
     @values = @item_1_hash.values.first
   end
 
@@ -91,13 +91,6 @@ class ItemRepositoryTest < Minitest::Test
     found = @repo.find_all_by_price(12.00)
     assert_instance_of Array, found
     assert_equal big_decimal, found.first.unit_price
-
-    # TO DO - delete this functionality
-    # found_1 = @repo.find_all_by_price(1200)
-    # found_2 = @repo.find_all_by_price("1200")
-    # found_3 = @repo.find_all_by_price(big_decimal)
-    # same = found_1 == found_2 && found_1 == found_3
-    # assert_equal true, same
   end
 
   def test_it_can_find_items_within_same_price_range
@@ -130,31 +123,39 @@ class ItemRepositoryTest < Minitest::Test
   end
 
 
-  def test_it_can_CREATE_new_item
-    assert_equal nil, @repo.find_by_id(263567475)
-    assert_equal 1367, @repo.all.count
-        
-    @repo.create(@item_1_hash.values.first)
-    assert_equal 1368, @repo.all.count
-    
-    assert_instance_of Item, @repo.find_by_id(263567475)
+  # --- CRUD ---
+
+  def test_it_creates_an_item
+    all_before = @repo.all.count.to_s.to_i
+    assert_equal 1367, all_before
+    hash = {name: "something"}
+    @repo.create(hash)
+    all_after = @repo.all.count.to_s.to_i
+    assert_equal 1368, all_after
+    assert_equal 263567475, @repo.all.last.id
   end
 
-  def test_it_can_UPDATE_existing_items
-    hash = {name: "GeoffX Plush Toys",
-            description: "Fun, plush toys for everyone!",
-            unit_price: "1200"}
-
+  def test_it_updates_an_item
+    found = @repo.find_by_id(263395237)
+    assert_equal 12.00, found.unit_price
+    hash = {unit_price: 13.00}
     @repo.update(263395237, hash)
-    entry = @repo.find_by_id(263395237)
-    assert_equal "GeoffX Plush Toys", entry.name
-    assert_equal "Fun, plush toys for everyone!", entry.description
-    assert_equal "1200", entry.unit_price
+    assert_equal 13.00, found.unit_price
+    assert_instance_of BigDecimal, found.unit_price
   end
 
-  def test_it_can_DELETE_existing_items
+  def test_it_deletes_an_item
+    found = @repo.find_by_id(263395237)
+    assert_instance_of Item, found
     @repo.delete(263395237)
-    assert_nil @repo.find_by_id(263395237)
+    not_found = @repo.find_by_id(263395237)
+    assert_nil not_found
   end
+
+
+
+
+
+
 
 end

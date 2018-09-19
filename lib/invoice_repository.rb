@@ -1,13 +1,11 @@
 require 'pry'
 
 require_relative 'finderclass'
-require_relative 'crud'
 
 require_relative 'invoice'
 
 
 class InvoiceRepository
-  include CRUD
 
   attr_reader :all
 
@@ -32,14 +30,14 @@ class InvoiceRepository
     return hash
   end
 
-  
+
   # --- Spec Harness Requirement ---
 
   # TO DO - TEST ME
   def inspect
-    "#<#{self.class} #{@merchants.size} rows>"
+    "#<#{self.class} #{@all.size} rows>"
   end
-  
+
 
   # --- Find By ---
 
@@ -58,22 +56,29 @@ class InvoiceRepository
   def find_all_by_status(status)
     FinderClass.find_all_by(all, :status, status)
   end
-  
-  
+
+
   # --- CRUD ---
 
-  def create(attributes)
-    id = make_id(all, :id)
-    data = {id => attributes} 
-    make_invoices(data)
+  def create(hash)
+    last = FinderClass.find_max(all, :id)
+    new_id = last.id + 1
+    hash[:id] = new_id
+    invoice = Invoice.new(hash)
+    @invoices << invoice
+    return invoice
   end
 
   def update(id, attributes)
-    update_entry(@invoices, id, attributes)
+    invoice = find_by_id(id)
+    invoice.make_updates(attributes) if invoice
   end
 
   def delete(id)
-    delete_entry(@invoices, id)
+    @invoices.delete_if{ |invoice| invoice.id == id }
   end
+
+
+
 
 end

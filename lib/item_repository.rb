@@ -2,13 +2,11 @@
 require 'pry'
 
 require_relative 'finderclass'
-require_relative 'crud'
 
 require_relative 'item'
 
 
 class ItemRepository
-  include CRUD
 
   attr_reader :all
 
@@ -38,7 +36,7 @@ class ItemRepository
 
   # TO DO - TEST ME
   def inspect
-    "#<#{self.class} #{@items.size} rows>"
+    "#<#{self.class} #{@all.size} rows>"
   end
 
 
@@ -57,10 +55,6 @@ class ItemRepository
   end
 
   def find_all_by_price(price)
-    # TO DO - delete this functionality
-    # price.class != BigDecimal ? price = BigDecimal.new(price, 4) : price
-    # TO DO -  What is the expected format of this price?
-    # TO DO - Should we be using the price_in_dollars method ??
     FinderClass.find_all_by(all, :unit_price, price)
   end
 
@@ -71,22 +65,39 @@ class ItemRepository
   def find_all_by_merchant_id(id)
     FinderClass.find_all_by(all, :merchant_id, id)
   end
-  
-  
+
+
   # --- CRUD ---
 
-  def create(attributes)
-    id = make_id(all, :id)
-    data = {id => attributes} 
-    make_items(data)
+  def create(hash)
+    last = FinderClass.find_max(all, :id)
+    new_id = last.id + 1
+    hash[:id] = new_id
+    item = Item.new(hash)
+    @items << item
+    return item
   end
 
   def update(id, attributes)
-    update_entry(@items, id, attributes)
+    item = find_by_id(id)
+    item.make_update(attributes) if item
   end
 
   def delete(id)
-    delete_entry(@items, id)
+    @items.delete_if{ |item| item.id == id }
   end
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 end
