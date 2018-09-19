@@ -311,6 +311,9 @@ class SalesAnalyst
     sum = sum(inv_items)
     return sum
   end
+  #
+  # totals_by_invoice_collection(invoice_ids)
+  #   invoice_ids.map{ |id| invoice_total(id) }
 
   def merchants_ranked_by_revenue
     ranked = @merchants.all.group_by { |merch| revenue_by_merchant(merch.id) }
@@ -319,26 +322,36 @@ class SalesAnalyst
     sorted = sorted.values.flatten
   end
 
+  #  TO DO - test me but already tested other places
+  def invoice_items_grouped_by_item(invoice_items)
+    FinderClass.group_by(invoice_items, :item_id)
+  end
+
+  # TO DO - Test Me
+  def quantity_by_item_id(hash)
+    hash.each { |item_id, inv_items|
+      hash[item_id] = sum(inv_items, :quantity)
+    }; return hash
+  end
+
   def most_sold_item_for_merchant(merchant_id)
     invs = @invoices.find_all_by_merchant_id(merchant_id)
     inv_items = invs.map { |inv| invoice_items_of_successful_transactions(inv.id)}
     inv_items = inv_items.flatten.compact
     groups    = invoice_items_grouped_by_item(inv_items)
-    groups.each { |item_id, inv_items|
-      groups[item_id] = sum(inv_items, :quantity)
-    }
+    groups = quantity_by_item_id(groups)
     max_qty  = groups.values.max
     item_ids = groups.find_all { |item_id, qty| qty == max_qty }.to_h
     item_ids = item_ids.keys
-    items    = item_ids.map { |id|
-      @items.all.find_all { |item| item.id == id }
-    }.flatten.uniq
+    items    = items_by_id_collection(item_ids).flatten.uniq
     return items
   end
 
-  #  TO DO - test me but already tested other places
-  def invoice_items_grouped_by_item(invoice_items)
-    FinderClass.group_by(invoice_items, :item_id)
+  # TO DO - Test Me
+  def revenue_by_item_id(hash)
+    hash.each { |item_id, inv_items|
+      hash[item_id] = inv_items.inject(0){ |sum, item| sum += revenue(item) }
+    }; return hash
   end
 
   def best_item_for_merchant(merchant_id)
@@ -346,15 +359,16 @@ class SalesAnalyst
     inv_items = invs.map { |inv| invoice_items_of_successful_transactions(inv.id)}
     inv_items = inv_items.flatten.compact
     groups = inv_items.group_by { |item| item.item_id  }
-    groups.each { |item_id, inv_items|
-      groups[item_id] = inv_items.inject(0){ |sum, item| sum += revenue(item) }
-    }
+    groups = revenue_by_item_id(groups)
     max_qty  = groups.values.max
     item_ids = groups.find_all { |item_id, qty| qty == max_qty }.to_h
     item_ids = item_ids.keys
     item     = items_by_id_collection(item_ids).flatten.first
     return item
   end
+
+
+
 
 
 end
