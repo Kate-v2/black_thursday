@@ -204,14 +204,9 @@ class SalesAnalyst
 
   def invoice_total(invoice_id)
     items_by_invoice = invoice_items_of_successful_transactions(invoice_id)
-    if items_by_invoice
-      sum    = items_by_invoice.inject(0) { |sum, item|
-        # cost = revenue(item)
-        # sum += cost
-        sum += revenue(item)
-      }
-      return sum
-    end
+    items_by_invoice.inject(0){|sum, item|
+      sum += revenue(item)
+    } if items_by_invoice
   end
 
   def revenue(invoice_item)
