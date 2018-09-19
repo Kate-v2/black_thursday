@@ -323,9 +323,9 @@ class SalesAnalyst
     invs = @invoices.find_all_by_merchant_id(merchant_id)
     inv_items = invs.map { |inv| invoice_items_of_successful_transactions(inv.id)}
     inv_items = inv_items.flatten.compact
-    groups = inv_items.group_by { |item| item.item_id  }
+    groups = FinderClass.group_by(inv_items, :item_id)
     groups.each { |item_id, inv_items|
-      groups[item_id] = inv_items.inject(0){ |sum, item| sum += item.quantity }
+      groups[item_id] = sum(inv_items, :quantity)
     }
     max_qty  = groups.values.max
     item_ids = groups.find_all { |item_id, qty| qty == max_qty }.to_h
