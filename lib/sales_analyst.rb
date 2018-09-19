@@ -206,8 +206,9 @@ class SalesAnalyst
     items_by_invoice = invoice_items_of_successful_transactions(invoice_id)
     if items_by_invoice
       sum    = items_by_invoice.inject(0) { |sum, item|
-        cost = revenue(item)
-        sum += cost
+        # cost = revenue(item)
+        # sum += cost
+        sum += revenue(item)
       }
       return sum
     end
@@ -256,8 +257,9 @@ class SalesAnalyst
     hash       = invoices_grouped_by_merchant
     hash.each { |id, invs|
       inv_ids  = FinderClass.make_array(invs, :id)
-      costs    = totals_by_invoice_collection(inv_ids)
-      hash[id] = costs.compact
+      # costs    = totals_by_invoice_collection(inv_ids)
+      # hash[id] = costs.compact
+      hash[id] = totals_by_invoice_collection(inv_ids).compact
     }
     hash.each { |id, costs| hash[id] = sum(costs) }
     top_ids    = hash.max_by(x) { |key, cost| cost}.to_h.keys
@@ -294,7 +296,7 @@ class SalesAnalyst
   def merchants_with_only_one_item
     ids    = single_item_merchant_pairs.keys
     merchs = merchants_by_id_collection(ids)
-    return merchs
+    # return merchs
   end
 
   def merchants_with_only_one_item_registered_in_month(word)
@@ -308,7 +310,7 @@ class SalesAnalyst
     merch_invs = @invoices.find_all_by_merchant_id(merchant_id)
     inv_items  = merch_invs.map { |inv| invoice_total(inv.id) }.compact
     sum        = sum(inv_items)
-    return sum
+    # return sum
   end
 
   def merchants_ranked_by_revenue
@@ -345,7 +347,7 @@ class SalesAnalyst
     item_ids  = groups.find_all { |item_id, qty| qty == max_qty }.to_h
     item_ids  = item_ids.keys
     items     = items_by_id_collection(item_ids).flatten.uniq
-    return items
+    # return items
   end
 
   # TO DO - Test Me
@@ -365,7 +367,7 @@ class SalesAnalyst
     item_ids  = groups.find_all { |item_id, qty| qty == max_qty }.to_h
     item_ids  = item_ids.keys
     item      = items_by_id_collection(item_ids).flatten.first
-    return item
+    # return item
   end
 
 end
