@@ -348,13 +348,13 @@ class SalesAnalystTest < Minitest::Test
   #   assert_equal true, actual
   # end
 
-  def test_it_makes_groups_of_merchant_items
-    skip
-  end
 
   def test_it_gets_single_item_merchant_pairs
     actual = @sa_csv.single_item_merchant_pairs
-
+    assert_instance_of Hash, actual
+    assert_operator 1, :<, actual.keys.first
+    all_ones = actual.values.all?{ |val| val == 1 }
+    assert_equal true, all_ones
   end
 
 
