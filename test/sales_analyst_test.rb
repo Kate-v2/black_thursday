@@ -347,10 +347,6 @@ class SalesAnalystTest < Minitest::Test
   #   assert_operator @merchants.all.count, :>, actual.count
   # end
   #
-  # def test_it_gets_merchants_with_pending_invoices
-  #   skip
-  # # end
-  #
   # def test_it_determines_if_an_invoice_is_successful_and_pending
   #   actual = @sa_csv.successful_and_pending?(1)
   #   assert_equal true, actual

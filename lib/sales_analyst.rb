@@ -254,7 +254,6 @@ class SalesAnalyst
   end
 
   def top_revenue_earners(x = 20)
-    # hash = FinderClass.group_by(@invoices.all, :merchant_id)
     hash = invoices_grouped_by_merchant
     hash.each { |id, invs|
       inv_ids = FinderClass.make_array(invs, :id)
@@ -275,11 +274,8 @@ class SalesAnalyst
     pending = @invoices.all.find_all { |invoice|
       successful_and_pending?(invoice.id)
     }
-    # shops = pending.group_by{ |invoice| invoice.merchant_id }
-    # shops = FinderClass.group_by(@invoice.all, :merchant_id)
     shops = invoices_grouped_by_merchant
     merch_ids = shops.keys
-    # merchants = merch_ids.map { |id| @merchants.find_by_id(id) }
     merchants = merchants_by_id_collection(merch_ids)
   end
 
@@ -298,7 +294,7 @@ class SalesAnalyst
 
   def merchants_with_only_one_item
     ids = single_item_merchant_pairs.keys
-    merchs = ids.map { |id| @merchants.find_by_id(id) }
+    merchs = merchants_by_id_collection(ids)
     return merchs
   end
 
