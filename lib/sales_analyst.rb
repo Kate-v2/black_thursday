@@ -207,12 +207,18 @@ class SalesAnalyst
     items_by_invoice = invoice_items_of_successful_transactions(invoice_id)
     if items_by_invoice
       sum = items_by_invoice.inject(0) { |sum, item|
-        cost = item.quantity * item.unit_price
+        # cost = item.quantity * item.unit_price
+        cost = revenue(item)
         sum += cost
       }
       return sum
     end
   end
+
+  def revenue(invoice_item)
+    invoice_item.quantity * invoice_item.unit_price
+  end
+
 
 
   # --- Merchant Revenue Analysis Methods ---
@@ -282,15 +288,46 @@ class SalesAnalyst
     list = groups[month]
   end
 
-
   def revenue_by_merchant(merchant_id)
+    # maybe returned doesn't count toward rev ? -- NOT HERE
+    merch_invs = @invoices.find_all_by_merchant_id(merchant_id)
+    # filtered = merch_inv.find_all { |inv| inv.status != :returned }
+    # inv_items = filtered.map { |inv| invoice_total(inv.id) }.compact
+    inv_items = merch_invs.map { |inv| invoice_total(inv.id) }.compact
+    sum = sum(inv_items)
+    return sum
+  end
+
+  def merchants_ranked_by_revenue
+    # ranked = @merchants.all.sort_by { |merch| revenue_by_merchant(merch.id) }.to_a
+    # ranked = @merchants.all.map { |merch|  }
+    ranked = @merchants.all.group_by { |merch| revenue_by_merchant(merch.id) }
+    count = ranked.count
+    sorted = ranked.max_by(count) { |rev, merch| rev }.to_h
+    sorted = sorted.values.flatten
   end
 
   def most_sold_item_for_merchant(merchant_id)
     merch_invoices = @invoices.find_all_by_merchant_id(merchant_id)
     inv_ids = merch_invoices.map { |inv| inv.id }
     merch_items = inv_ids.map { |id| @invoice_items.find_all_by_invoice_id(id)}.flatten
-
+    item_groups = merch_items.group_by { |item| item.item_id }
+    item_groups.each { |id, inv_items|
+      item_groups[id] = inv_items.inject(0){ |count, item|
+        count += item.quantity
+      } }
+    max = item_groups.max_by { |id, qty| qty }
+    maxes = max.map.with_index { |val, index| [val, max[index + 1]] if index % 2 == 0 }
+    maxes = maxes.compact.to_h
+    max = maxes.keys
+    # binding.pry
+    # breaks here
+    # looks like a merch id ?
+    list = max.map { |id| #binding.pry;
+      @invoice_items.find_by_id(id).item_id }
+    # binding.pry
+    best = list.map { |item_id| @items.find_by_id(id) }
+    # binding.pry
   end
 
   def best_item_for_merchant(merchant_id)
