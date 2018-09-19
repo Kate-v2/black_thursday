@@ -311,25 +311,66 @@ class SalesAnalyst
     # inv_items group by item id
     # id => [].each -> inject for qty
     # TO DO - group on item_id; the find count
-    merch_invoices = @invoices.find_all_by_merchant_id(merchant_id)
-    inv_ids = merch_invoices.map { |inv| inv.id }
-    merch_items = inv_ids.map { |id| @invoice_items.find_all_by_invoice_id(id)}.flatten
-    item_groups = merch_items.group_by { |item| item.item_id }
-    item_groups.each { |id, inv_items|
-      item_groups[id] = inv_items.inject(0){ |count, item|
-        count += item.quantity
-      } }
-    max = item_groups.max_by { |id, qty| qty }
-    maxes = max.map.with_index { |val, index| [val, max[index + 1]] if index % 2 == 0 }
-    maxes = maxes.compact.to_h
-    max = maxes.keys
+
+
+    invs = @invoices.find_all_by_merchant_id(merchant_id)
+    inv_items = invs.map { |inv| invoice_items_of_successful_transactions(inv.id)}
+    inv_items = inv_items.flatten.compact
     # binding.pry
-    # breaks here
-    # looks like a merch id ?
-    list = max.map { |id| #binding.pry;
-      @invoice_items.find_by_id(id).item_id }
-    # binding.pry
-    best = list.map { |item_id| @items.find_by_id(id) }
+    # inv_items = invs.map { |inv| @invoice_items.find_all_by_invoice_id(inv.id) }.flatten
+    groups = inv_items.group_by { |item| item.item_id  }
+    groups.each { |item_id, inv_items|
+      groups[item_id] = inv_items.inject(0){ |sum, item| sum += item.quantity }
+      # groups[item_id] = inv_items.reverse.inject(0){ |sum, item| sum = item.quantity }
+    }
+    max_qty  = groups.values.max
+    item_ids = groups.find_all { |item_id, qty| qty == max_qty }.to_h
+    item_ids = item_ids.keys
+    items    = item_ids.map { |id|
+      @items.all.find_all { |item| item.id == id }
+    }.flatten.uniq
+    return items
+
+
+
+
+    # MAX BY will only return the first
+    # maxes = groups.max_by { |item_id, qty| qty }
+    # maxes = maxes.map.with_index { |val, index| [val, maxes[index + 1]] if index % 2 == 0 }
+    # maxes = maxes.compact.to_h
+    # max   = maxes.keys
+    # # Breaks here
+    # # items = max.map { |id| binding.pry; @items.find_by_id(id) }
+    # items = max.map { |id|
+    #   @items.all.find_all { |item| item.id == id }
+    # }.flatten
+    # # binding.pry
+
+
+
+
+
+
+
+    # merch_invoices = @invoices.find_all_by_merchant_id(merchant_id)
+    # inv_ids = merch_invoices.map { |inv| inv.id }
+    # merch_items = inv_ids.map { |id| @invoice_items.find_all_by_invoice_id(id)}.flatten
+    # item_groups = merch_items.group_by { |item| item.item_id }
+    # item_groups.each { |id, inv_items|
+    #   item_groups[id] = inv_items.inject(0){ |count, item|
+    #     count += item.quantity
+    #   } }
+    # max = item_groups.max_by { |id, qty| qty }
+    # maxes = max.map.with_index { |val, index| [val, max[index + 1]] if index % 2 == 0 }
+    # maxes = maxes.compact.to_h
+    # max = maxes.keys
+    # # binding.pry
+    # # breaks here
+    # # looks like a merch id ?
+    # list = max.map { |id| #binding.pry;
+    #   @invoice_items.find_by_id(id).item_id }
+    # # binding.pry
+    # best = list.map { |item_id| @items.find_by_id(id) }
     # binding.pry
   end
 
