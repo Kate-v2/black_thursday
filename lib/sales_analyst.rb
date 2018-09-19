@@ -222,10 +222,29 @@ class SalesAnalyst
 
   # --- Merchant Revenue Analysis Methods ---
 
+  # TO DO - test me, but is tested other places
+  def merchants_by_id_collection(collection)
+    FinderClass.match_by_data(@merchants.all, collection, :id)
+  end
+
+  # TO DO - test me, but is tested other places
+  def invoices_by_id_collection(collection)
+    FinderClass.match_by_data(@invoices.all, collection, :id)
+  end
+
+  # TO DO - test me, but is tested other places
+  def invoice_items_by_id_collection(collection)
+    FinderClass.match_by_data(@invoice_items.all, collection, :id)
+  end
+
+  # TO DO - test me, but is tested other places
+  def items_by_id_collection(collection)
+    FinderClass.match_by_data(@items.all, collection, :id)
+  end
+
   def totals_by_invoice_collection(invoice_ids)
     invoice_ids.map{ |id| invoice_total(id) }
   end
-
 
   def total_revenue_by_date(date)
     day_invoices = FinderClass.find_by_all_by_date(@invoices.all, :created_at, date)
@@ -235,7 +254,8 @@ class SalesAnalyst
   end
 
   def top_revenue_earners(x = 20)
-    hash = FinderClass.group_by(@invoices.all, :merchant_id)
+    # hash = FinderClass.group_by(@invoices.all, :merchant_id)
+    hash = invoices_grouped_by_merchant
     hash.each { |id, invs|
       inv_ids = FinderClass.make_array(invs, :id)
       costs = totals_by_invoice_collection(inv_ids)
@@ -243,7 +263,7 @@ class SalesAnalyst
     }
     hash.each { |id, costs| hash[id] = sum(costs) }
     top_ids = hash.max_by(x) { |key, cost| cost}.to_h.keys
-    list = top_ids.map { |id| @merchants.find_by_id(id)}
+    list = merchants_by_id_collection(top_ids)
   end
 
   def merchants_with_pending_invoices
@@ -255,9 +275,12 @@ class SalesAnalyst
     pending = @invoices.all.find_all { |invoice|
       successful_and_pending?(invoice.id)
     }
-    shops = pending.group_by{ |invoice| invoice.merchant_id }
+    # shops = pending.group_by{ |invoice| invoice.merchant_id }
+    # shops = FinderClass.group_by(@invoice.all, :merchant_id)
+    shops = invoices_grouped_by_merchant
     merch_ids = shops.keys
-    merchants = merch_ids.map { |id| @merchants.find_by_id(id) }
+    # merchants = merch_ids.map { |id| @merchants.find_by_id(id) }
+    merchants = merchants_by_id_collection(merch_ids)
   end
 
   def successful_and_pending?(invoice_id)

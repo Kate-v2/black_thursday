@@ -308,33 +308,33 @@ class SalesAnalystTest < Minitest::Test
 
   # --- Merchant Revenue Analysis Methods ---
 
-  def test_it_gets_array_of_invoice_totals
-    invoice_ids = [1, 2, 3]
-    actual = @sa_csv.totals_by_invoice_collection(invoice_ids)
-    assert_instance_of Array, actual
-    assert_instance_of BigDecimal, actual.first
-  end
+  # def test_it_gets_array_of_invoice_totals
+  #   invoice_ids = [1, 2, 3]
+  #   actual = @sa_csv.totals_by_invoice_collection(invoice_ids)
+  #   assert_instance_of Array, actual
+  #   assert_instance_of BigDecimal, actual.first
+  # end
+  #
+  #
+  # def test_it_gets_the_total_revenue_by_day
+  #   date = "2009-02-07"
+  #   revenue = @sa_csv.total_revenue_by_date(date)
+  #   assert_equal 21067.77, revenue
+  # end
 
-
-  def test_it_gets_the_total_revenue_by_day
-    date = "2009-02-07"
-    revenue = @sa_csv.total_revenue_by_date(date)
-    assert_equal 21067.77, revenue
-  end
-
-  def test_it_gets_the_top_x_or_20_merchants_by_revenue
-    # --- default count ---
-    top = @sa_csv.top_revenue_earners
-    assert_instance_of Array, top
-    assert_equal 20, top.count
-    assert_instance_of Merchant, top.first
-    # --- custom count ---
-    skip
-    top = @sa_csv.top_revenue_earners(40)
-    assert_instance_of Array, top
-    assert_equal 40, top.count
-    assert_instance_of Merchant, top.first
-  end
+  # def test_it_gets_the_top_x_or_20_merchants_by_revenue
+  #   # --- default count ---
+  #   top = @sa_csv.top_revenue_earners
+  #   assert_instance_of Array, top
+  #   assert_equal 20, top.count
+  #   assert_instance_of Merchant, top.first
+  #   # --- custom count ---
+  #   skip
+  #   top = @sa_csv.top_revenue_earners(40)
+  #   assert_instance_of Array, top
+  #   assert_equal 40, top.count
+  #   assert_instance_of Merchant, top.first
+  # end
   #
   # def test_it_gets_all_merchants_with_pending_invoices
   #   skip
