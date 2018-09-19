@@ -41,7 +41,6 @@ class SalesAnalyst
     average = (sum / ct)
   end   # returns an unrounded float
 
-  # TO DO - TEST ME
   def percentage(fraction, all)
     (fraction / all.to_f ) * 100
   end
@@ -192,8 +191,6 @@ class SalesAnalyst
     all = @invoices.all.count.to_f
     found = @invoices.find_all_by_status(status).count
     percent = percentage(found, all).round(2)
-    # percent = ( found / all ) * 100
-    # percent.round(2)
   end
 
 
@@ -213,12 +210,10 @@ class SalesAnalyst
     items_by_invoice = invoice_items_of_successful_transactions(invoice_id)
     if items_by_invoice
       sum = items_by_invoice.inject(0) { |sum, item|
-        cost = item.quantity * item.unit_price_to_dollars
+        cost = item.quantity * item.unit_price
         sum += cost
       }
       return sum
-      # return BigDecimal.new(sum, 4)
-      # TO DO - I think the SpecHarness is wrong -- wants both an int & BigDecimal
     end
   end
 

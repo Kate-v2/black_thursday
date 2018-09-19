@@ -287,31 +287,11 @@ class SalesAnalystTest < Minitest::Test
     assert_equal true, @sa_csv.invoice_paid_in_full?( id_with_a_success )
   end
 
-  #  SAVE FOR REVENUE
-  # def test_it_can_find_all_successful_transactions_by_invoice_id
-  #   id = 520
-  #   # -- id has failed transactions --
-  #   all_by_id = @sa_csv.transactions.find_all_by_invoice_id( id )
-  #   all_transaction_results = all_by_id.map { |trans| trans.result }
-  #   all_has_failed = all_transaction_results.include?(:failed)
-  #   assert_equal true, all_has_failed
-  #   # -- only successful transactions are returned --
-  #   found = @sa_csv.successful_transactions_by_invoice_id ( id )
-  #   found_transaction_results = found.map { |trans| trans.result }
-  #   found_has_failed = found_transaction_results.include?(:failed)
-  #   assert_equal false, found_has_failed
-  # end
-
-
-
   def test_it_can_find_a_list_of_successful_invoice_items
     # -- Returned --> not successful --
     id = 25
     items = @sa_csv.invoice_items_of_successful_transactions( id )
     assert_nil items
-
-    # TO DO -- is pending considered a success???
-
     # -- Pending --> successful --
     id = 1
     items = @sa_csv.invoice_items_of_successful_transactions( id )
@@ -327,53 +307,7 @@ class SalesAnalystTest < Minitest::Test
   def test_it_can_total_invoice_charge
     id = 1
     assert_equal 21067.77, @sa_csv.invoice_total(id)
-    # TO DO - I think the SpecHarness is wrong -- wants both an int & BigDecimal
   end
-
-
-
-
-
-
-
-
-  #  SAVE FOR REVENUE
-  # def test_it_can_determine_if_an_invoice_was_not_returned
-  #   # -- Returned --> not successful --
-  #   id = 25
-  #   assert_equal false, @sa_csv.invoice_was_not_returned?( id )
-  #   # -- Pending --> successful --
-  #   id = 1
-  #   assert_equal true, @sa_csv.invoice_was_not_returned?( id )
-  #   # -- Shipped --> successful --
-  #   id = 2
-  #   assert_equal true, @sa_csv.invoice_was_not_returned?( id )
-  # end
-
-
-#  SAVE FOR REVENUE
-
-  # def test_it_can_total_the_invoice_revenue
-  #   # -- invoice id does not exist --
-  #   nothing = @sa_csv.invoice_total(0)
-  #   assert_nil nothing
-  #   # -- first invoice id --
-  #   id = 1
-  #   total_1 = @sa_csv.invoice_total( id )
-  #   assert_operator 0, :<, total_1
-  #   assert_instance_of Float, total_1
-  #   items = @sa_csv.invoice_items_of_successful_transactions( id )
-  #   price = items.first.unit_price_to_dollars
-  #   qty = items.first.quantity
-  #   refute_equal total_1, qty
-  #   refute_equal total_1, price
-  #   refute_equal total_1, qty * price
-  #   # -- second invoice id --
-  #   total_2 = @sa_csv.invoice_total(2)
-  #   assert_operator 0, :<, total_2
-  #
-  #   refute_equal total_1, total_2
-  # end
 
 
 
