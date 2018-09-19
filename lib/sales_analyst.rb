@@ -110,10 +110,10 @@ class SalesAnalyst
 
   def merchants_with_high_item_count # find all merchants > one std of items
     groups    = merchant_stores
-    values      = merchant_store_item_counts(groups)
+    values    = merchant_store_item_counts(groups)
     all_above = find_exceptional(groups, values, 1, :count)
     merch_ids = all_above.keys
-    list = FinderClass.match_by_data(@merchants.all, merch_ids, :id)
+    list      = merchants_by_id_collection(merch_ids)
     return list
   end
 
@@ -151,42 +151,41 @@ class SalesAnalyst
 
   def average_invoices_per_merchant
     counts = invoice_counts_per_merchant
-    mean = average(counts).round(2)
+    mean   = average(counts).round(2)
   end
 
   def average_invoices_per_merchant_standard_deviation
     counts = invoice_counts_per_merchant
-    mean = average_invoices_per_merchant
-    std = standard_deviation(counts, mean).round(2)
+    mean   = average_invoices_per_merchant
+    std    = standard_deviation(counts, mean).round(2)
   end
 
   def top_merchants_by_invoice_count  # two standard deviations above the mean
-    groups = invoices_grouped_by_merchant
-    counts = invoice_counts_per_merchant
-    top = find_exceptional(groups, counts, 2, :count)
-    merch_ids = top.keys
-    top_merchants = FinderClass.match_by_data(@merchants.all, merch_ids, :id )
-
+    groups        = invoices_grouped_by_merchant
+    counts        = invoice_counts_per_merchant
+    top           = find_exceptional(groups, counts, 2, :count)
+    merch_ids     = top.keys
+    top_merchants = merchants_by_id_collection(merch_ids)
   end
 
   def bottom_merchants_by_invoice_count  # two standard deviations below the mean
-    groups = invoices_grouped_by_merchant
-    counts = invoice_counts_per_merchant
-    worst = find_exceptional(groups, counts, -2, :count)
-    merch_ids = worst.keys
-    bottom_merchants = FinderClass.match_by_data(@merchants.all, merch_ids, :id )
+    groups           = invoices_grouped_by_merchant
+    counts           = invoice_counts_per_merchant
+    worst            = find_exceptional(groups, counts, -2, :count)
+    merch_ids        = worst.keys
+    bottom_merchants = merchants_by_id_collection(merch_ids)
   end
 
   def top_days_by_invoice_count
-    groups = @invoices.all.group_by { |invoice| invoice.created_at.wday}
-    values = FinderClass.make_array(groups.values, :count)
-    top = find_exceptional(groups, values, 1, :count)
+    groups      = @invoices.all.group_by { |invoice| invoice.created_at.wday}
+    values      = FinderClass.make_array(groups.values, :count)
+    top         = find_exceptional(groups, values, 1, :count)
     top_as_word = top.keys.map { |day| FinderClass.day_of_week(day) }
   end
 
   def invoice_status(status)
-    all = @invoices.all.count.to_f
-    found = @invoices.find_all_by_status(status).count
+    all     = @invoices.all.count.to_f
+    found   = @invoices.find_all_by_status(status).count
     percent = percentage(found, all).round(2)
   end
 
@@ -199,19 +198,15 @@ class SalesAnalyst
   end
 
   def invoice_items_of_successful_transactions(invoice_id)
-    sold = invoice_paid_in_full?(invoice_id)
+    sold             = invoice_paid_in_full?(invoice_id)
     items_by_invoice = @invoice_items.find_all_by_invoice_id(invoice_id) if sold
   end
 
   def invoice_total(invoice_id)
     items_by_invoice = invoice_items_of_successful_transactions(invoice_id)
-    if items_by_invoice
-      sum = items_by_invoice.inject(0) { |sum, item|
-        cost = revenue(item)
-        sum += cost
-      }
-      return sum
-    end
+    items_by_invoice.inject(0){|sum, item|
+      sum += revenue(item)
+    } if items_by_invoice
   end
 
   def revenue(invoice_item)
@@ -254,15 +249,16 @@ class SalesAnalyst
   end
 
   def top_revenue_earners(x = 20)
-    hash = invoices_grouped_by_merchant
+    hash       = invoices_grouped_by_merchant
     hash.each { |id, invs|
-      inv_ids = FinderClass.make_array(invs, :id)
-      costs = totals_by_invoice_collection(inv_ids)
-      hash[id] = costs.compact
+      inv_ids  = FinderClass.make_array(invs, :id)
+      # costs    = totals_by_invoice_collection(inv_ids)
+      # hash[id] = costs.compact
+      hash[id] = totals_by_invoice_collection(inv_ids).compact
     }
     hash.each { |id, costs| hash[id] = sum(costs) }
-    top_ids = hash.max_by(x) { |key, cost| cost}.to_h.keys
-    list = merchants_by_id_collection(top_ids)
+    top_ids    = hash.max_by(x) { |key, cost| cost}.to_h.keys
+    list       = merchants_by_id_collection(top_ids)
   end
 
   def merchants_with_pending_invoices
@@ -289,69 +285,84 @@ class SalesAnalyst
   def single_item_merchant_pairs
     groups = merchant_stores
     groups.each{ |id, items| groups[id] = items.count }
-    ones = groups.find_all { |id, count| count == 1 }.to_h
+    ones   = groups.find_all { |id, count| count == 1 }.to_h
   end
 
   def merchants_with_only_one_item
-    ids = single_item_merchant_pairs.keys
+    ids    = single_item_merchant_pairs.keys
     merchs = merchants_by_id_collection(ids)
-    return merchs
+    # return merchs
   end
 
   def merchants_with_only_one_item_registered_in_month(word)
-    month = FinderClass.month_from_word(word).to_i
-    shops = merchants_with_only_one_item
+    month  = FinderClass.month_from_word(word).to_i
+    shops  = merchants_with_only_one_item
     groups = shops.group_by { |shop| shop.created_at.month }
-    list = groups[month]
+    list   = groups[month]
   end
 
   def revenue_by_merchant(merchant_id)
     merch_invs = @invoices.find_all_by_merchant_id(merchant_id)
-    inv_items = merch_invs.map { |inv| invoice_total(inv.id) }.compact
-    sum = sum(inv_items)
-    return sum
+    inv_items  = merch_invs.map { |inv| invoice_total(inv.id) }.compact
+    sum        = sum(inv_items)
+    # return sum
   end
 
   def merchants_ranked_by_revenue
     ranked = @merchants.all.group_by { |merch| revenue_by_merchant(merch.id) }
-    count = ranked.count
+    count  = ranked.count
     sorted = ranked.max_by(count) { |rev, merch| rev }.to_h
     sorted = sorted.values.flatten
   end
 
+  #  TO DO - test me but already tested other places
+  def invoice_items_grouped_by_item(invoice_items)
+    FinderClass.group_by(invoice_items, :item_id)
+  end
+
+  # TO DO - Test Me
+  def quantity_by_item_id(hash)
+    hash.each { |item_id, inv_items|
+      hash[item_id] = sum(inv_items, :quantity)
+    }; return hash
+  end
+
+  # TO DO - Test Me
+  def successful_invoices_items_by_invoice_collection(invoices)
+    invoices.map { |inv| invoice_items_of_successful_transactions(inv.id) }
+  end
+
   def most_sold_item_for_merchant(merchant_id)
     invs = @invoices.find_all_by_merchant_id(merchant_id)
-    inv_items = invs.map { |inv| invoice_items_of_successful_transactions(inv.id)}
+    inv_items = successful_invoices_items_by_invoice_collection(invs)
     inv_items = inv_items.flatten.compact
-    groups = FinderClass.group_by(inv_items, :item_id)
-    groups.each { |item_id, inv_items|
-      groups[item_id] = sum(inv_items, :quantity)
-    }
-    max_qty  = groups.values.max
-    item_ids = groups.find_all { |item_id, qty| qty == max_qty }.to_h
-    item_ids = item_ids.keys
-    items    = item_ids.map { |id|
-      @items.all.find_all { |item| item.id == id }
-    }.flatten.uniq
-    return items
+    groups    = invoice_items_grouped_by_item(inv_items)
+    groups    = quantity_by_item_id(groups)
+    max_qty   = groups.values.max
+    item_ids  = groups.find_all { |item_id, qty| qty == max_qty }.to_h
+    item_ids  = item_ids.keys
+    items     = items_by_id_collection(item_ids).flatten.uniq
+    # return items
+  end
+
+  # TO DO - Test Me
+  def revenue_by_item_id(hash)
+    hash.each { |item_id, inv_items|
+      hash[item_id] = inv_items.inject(0){ |sum, item| sum += revenue(item) }
+    }; return hash
   end
 
   def best_item_for_merchant(merchant_id)
     invs = @invoices.find_all_by_merchant_id(merchant_id)
     inv_items = invs.map { |inv| invoice_items_of_successful_transactions(inv.id)}
     inv_items = inv_items.flatten.compact
-    groups = inv_items.group_by { |item| item.item_id  }
-    groups.each { |item_id, inv_items|
-      groups[item_id] = inv_items.inject(0){ |sum, item| sum += revenue(item) }
-    }
-    max_qty  = groups.values.max
-    item_ids = groups.find_all { |item_id, qty| qty == max_qty }.to_h
-    item_ids = item_ids.keys
-    item    = item_ids.map { |id|
-      @items.all.find_all { |item| item.id == id }
-    }.flatten.first
-    return item
+    groups    = inv_items.group_by { |item| item.item_id  }
+    groups    = revenue_by_item_id(groups)
+    max_qty   = groups.values.max
+    item_ids  = groups.find_all { |item_id, qty| qty == max_qty }.to_h
+    item_ids  = item_ids.keys
+    item      = items_by_id_collection(item_ids).flatten.first
+    # return item
   end
-
 
 end

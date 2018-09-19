@@ -127,7 +127,7 @@ class SalesAnalystTest < Minitest::Test
     assert_operator std_high, :<=, top.unit_price
   end
 
-  
+
   # --- Item Repo Analysis Methods ---
 
   def test_it_creates_merchant_stores_by_id_and_item_collection
@@ -367,20 +367,5 @@ class SalesAnalystTest < Minitest::Test
     all_merch = actual.all?{ |val| val.class == Merchant }
     assert_equal true, all_merch
   end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 end
