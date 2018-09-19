@@ -226,8 +226,6 @@ class SalesAnalyst
 
 
   def top_revenue_earners(x = 20)
-    # invoice --> total
-    #  invoice --> merchant
     hash = @invoices.all.group_by {|inv| inv.merchant_id}
     hash.each { |id, invs|
       inv_ids = invs.map { |inv| inv.id }
@@ -240,6 +238,39 @@ class SalesAnalyst
     list = top_ids.map { |id| @merchants.find_by_id(id)}
   end
 
+  def merchants_with_pending_invoices
+    # pending = @invoices.find_all_by_status(:pending)
+    # inv_ids = pending.map { |inv| inv.id }
+    # successful = inv_ids.find_all { |id| invoice_paid_in_full?(id) }
+    # ids = successful.map {|id| .merchant_id }.uniq
+    # merchants = ids.map { |id| @merchants.find_by_id(id) }
+    pending = @invoices.all.find_all { |invoice|
+      successful_and_pending?(invoice.id)
+    }
+    shops = pending.group_by{ |invoice| invoice.merchant_id }
+    merch_ids = shops.keys
+    merchants = merch_ids.map { |id| @merchants.find_by_id(id) }
+  end
+
+  def successful_and_pending?(invoice_id)
+    success = invoice_paid_in_full?(invoice_id)
+    invoice = @invoices.find_by_id(invoice_id)
+    pending = invoice.status == :pending
+    success && pending
+  end
+
+  def merchants_with_only_one_item
+    groups = @items.all.group_by { |item| item.merchant_id }
+    groups.each{ |id, items| groups[id] = items.count }
+    ones = groups.find_all { |id, count| count == 1 }.to_h
+    ids = ones.keys
+    merchants = ids.map { |id| @merchants.find_by_id(id) }
+  end
+
+  # def merchants_with_only_one_item_registered_in_month("Month name")
+  #
+  #
+  # end
 
 
 

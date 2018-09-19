@@ -92,5 +92,21 @@ class FinderClass
     date.class == Date ? date = date.to_s : date = date.to_s.split[0]
   end
 
+  def self.month_from_word(word)
+    case word
+    when "January"; "01"
+    when "February"; "02"
+    when "March"; "03"
+    when "April"; "04"
+    when "May"; "05"
+    when "June"; "06"
+    when "July"; "07"
+    when "August"; "08"
+    when "September"; "09"
+    when "October"; "10"
+    when "November"; "11"
+    when "December"; "12"
+  end
+
 
 end
