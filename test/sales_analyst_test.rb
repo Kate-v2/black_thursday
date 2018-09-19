@@ -308,36 +308,61 @@ class SalesAnalystTest < Minitest::Test
 
   # --- Merchant Revenue Analysis Methods ---
 
-  def test_it_gets_the_total_revenue_by_day
-    date = "2009-02-07"
-    revenue = @sa_csv.total_revenue_by_date(date)
-    assert_equal 21067.77, revenue
+  # def test_it_gets_the_total_revenue_by_day
+  #   date = "2009-02-07"
+  #   revenue = @sa_csv.total_revenue_by_date(date)
+  #   assert_equal 21067.77, revenue
+  # end
+  #
+  # def test_it_gets_the_top_x_or_20_merchants_by_revenue
+  #   # --- default count ---
+  #   top = @sa_csv.top_revenue_earners
+  #   assert_instance_of Array, top
+  #   assert_equal 20, top.count
+  #   assert_instance_of Merchant, top.first
+  #   # --- custom count ---
+  #   skip
+  #   top = @sa_csv.top_revenue_earners(40)
+  #   assert_instance_of Array, top
+  #   assert_equal 40, top.count
+  #   assert_instance_of Merchant, top.first
+  # end
+  #
+  # def test_it_gets_all_merchants_with_pending_invoices
+  #   skip
+  #   expected = 467
+  #   # current output (via success & pending) is 393
+  #   # output by only pending was 448   (this was uniq)
+  #   actual = @sa_csv.merchants_with_pending_invoices
+  #   assert_instance_of Array, actual
+  #   assert_instance_of Merchant, actual.first
+  #   assert_operator @merchants.all.count, :>, actual.count
+  # end
+  #
+  # def test_it_gets_merchants_with_pending_invoices
+  #   skip
+  # # end
+  #
+  # def test_it_determines_if_an_invoice_is_successful_and_pending
+  #   actual = @sa_csv.successful_and_pending?(1)
+  #   assert_equal true, actual
+  # end
+
+  def test_it_makes_groups_of_merchant_items
+    skip
   end
 
-  def test_it_gets_the_top_x_or_20_merchants_by_revenue
-    # --- default count ---
-    top = @sa_csv.top_revenue_earners
-    assert_instance_of Array, top
-    assert_equal 20, top.count
-    assert_instance_of Merchant, top.first
-    # --- custom count ---
-    skip
-    top = @sa_csv.top_revenue_earners(40)
-    assert_instance_of Array, top
-    assert_equal 40, top.count
-    assert_instance_of Merchant, top.first
+  def test_it_gets_single_item_merchant_pairs
+    actual = @sa_csv.single_item_merchant_pairs
+
   end
 
-  def test_it_gets_all_merchants_with_pending_invoices
-    skip
-    expected = 467
-    # current output (via success & pending) is 393
-    # output by only pending was 448   (this was uniq)
-    actual = @sa_csv.merchants_with_pending_invoices
-    assert_instance_of Array, actual
-    assert_instance_of Merchant, actual.first
-    assert_operator @merchants.all.count, :>, actual.count
-  end
+
+
+
+
+
+
 
 
 end

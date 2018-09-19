@@ -263,12 +263,8 @@ class SalesAnalyst
     success && pending
   end
 
-  def groups_of_merchant_items
-    @items.all.group_by { |item| item.merchant_id }
-  end
-
   def single_item_merchant_pairs
-    groups = groups_of_merchant_items
+    groups = merchant_stores
     groups.each{ |id, items| groups[id] = items.count }
     ones = groups.find_all { |id, count| count == 1 }.to_h
   end
