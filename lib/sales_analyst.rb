@@ -304,7 +304,7 @@ class SalesAnalyst
     merch_invoices = @invoices.find_all_by_merchant_id(merchant_id)
     inv_ids = merch_invoices.map { |inv| inv.id }
     merch_items = inv_ids.map { |id| @invoice_items.find_all_by_invoice_id(id)}.flatten
-
+    
   end
 
   def best_item_for_merchant(merchant_id)
