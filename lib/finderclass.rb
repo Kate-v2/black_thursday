@@ -62,6 +62,8 @@ class FinderClass
     end
   end
 
-  
+  def self.make_array(array, method)
+    array.inject([]) { |arr, obj| arr << obj.send(method) }
+  end
 
 end

@@ -182,4 +182,13 @@ class FinderClassTest < MiniTest::Test
     assert_equal "Friday",    FinderClass.day_of_week(5)
     assert_equal "Saturday",  FinderClass.day_of_week(6)
   end
+
+  def test_it_can_make_an_array_based_on_a_passed_method
+    given = [ [1,2,3], [1], [1,2,3,4] ]
+    actual = FinderClass.make_array(given, :count)
+    expected = [3, 1, 4]
+    assert_equal expected, actual
+  end
+
+
 end
