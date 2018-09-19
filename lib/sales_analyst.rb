@@ -207,7 +207,6 @@ class SalesAnalyst
     items_by_invoice = invoice_items_of_successful_transactions(invoice_id)
     if items_by_invoice
       sum = items_by_invoice.inject(0) { |sum, item|
-        # cost = item.quantity * item.unit_price
         cost = revenue(item)
         sum += cost
       }
@@ -226,10 +225,9 @@ class SalesAnalyst
   def total_revenue_by_date(date)
     day_invoices = FinderClass.find_by_all_by_date(@invoices.all, :created_at, date)
     inv_ids      = FinderClass.make_array(day_invoices, :id).flatten
-    inv_costs    = inv_ids.map{ |id| invoice_total(id) } #.compact!
+    inv_costs    = inv_ids.map{ |id| invoice_total(id) }
     total        = sum(inv_costs)
   end
-
 
   def top_revenue_earners(x = 20)
     hash = @invoices.all.group_by {|inv| inv.merchant_id}
@@ -289,10 +287,7 @@ class SalesAnalyst
   end
 
   def revenue_by_merchant(merchant_id)
-    # maybe returned doesn't count toward rev ? -- NOT HERE
     merch_invs = @invoices.find_all_by_merchant_id(merchant_id)
-    # filtered = merch_inv.find_all { |inv| inv.status != :returned }
-    # inv_items = filtered.map { |inv| invoice_total(inv.id) }.compact
     inv_items = merch_invs.map { |inv| invoice_total(inv.id) }.compact
     sum = sum(inv_items)
     return sum
@@ -333,27 +328,10 @@ class SalesAnalyst
     max_qty  = groups.values.max
     item_ids = groups.find_all { |item_id, qty| qty == max_qty }.to_h
     item_ids = item_ids.keys
-    items    = item_ids.map { |id|
+    item    = item_ids.map { |id|
       @items.all.find_all { |item| item.id == id }
     }.flatten.first
-    # binding.pry
-
-    return items
-
-
-
-
-
-
-    # # This is only from a single invoice -- group on item id; the count revenue
-    # invs = @invoices.find_all_by_merchant_id(merchant_id)
-    # inv_items = invs.map { |inv| @invoice_items.find_all_by_invoice_id(inv) }.flatten
-    # groups = inv_items.group_by { |item| revenue(item) }
-    # max = groups.max_by { |rev, item| rev }
-    # max.find_all { |dunno| dunno.class == Item  }
-    # # maxes = max.map.with_index { |val, index| [val, max[index + 1]] if index % 2 == 0 }
-    # # maxes = maxes.compact.to_h
-    # # max = maxes.values
+    return item
   end
 
 
