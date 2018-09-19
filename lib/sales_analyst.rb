@@ -311,9 +311,6 @@ class SalesAnalyst
     sum = sum(inv_items)
     return sum
   end
-  #
-  # totals_by_invoice_collection(invoice_ids)
-  #   invoice_ids.map{ |id| invoice_total(id) }
 
   def merchants_ranked_by_revenue
     ranked = @merchants.all.group_by { |merch| revenue_by_merchant(merch.id) }
@@ -334,16 +331,22 @@ class SalesAnalyst
     }; return hash
   end
 
+  # TO DO - Test Me
+  def successful_invoices_items_by_invoice_collection(invoices)
+    invoices.map { |inv| invoice_items_of_successful_transactions(inv.id) }
+  end
+
   def most_sold_item_for_merchant(merchant_id)
-    invs = @invoices.find_all_by_merchant_id(merchant_id)
-    inv_items = invs.map { |inv| invoice_items_of_successful_transactions(inv.id)}
+    invs      = @invoices.find_all_by_merchant_id(merchant_id)
+    # inv_items = invs.map { |inv| invoice_items_of_successful_transactions(inv.id)}
+    inv_items = successful_invoices_items_by_invoice_collection(invs)
     inv_items = inv_items.flatten.compact
     groups    = invoice_items_grouped_by_item(inv_items)
-    groups = quantity_by_item_id(groups)
-    max_qty  = groups.values.max
-    item_ids = groups.find_all { |item_id, qty| qty == max_qty }.to_h
-    item_ids = item_ids.keys
-    items    = items_by_id_collection(item_ids).flatten.uniq
+    groups    = quantity_by_item_id(groups)
+    max_qty   = groups.values.max
+    item_ids  = groups.find_all { |item_id, qty| qty == max_qty }.to_h
+    item_ids  = item_ids.keys
+    items     = items_by_id_collection(item_ids).flatten.uniq
     return items
   end
 
@@ -366,9 +369,5 @@ class SalesAnalyst
     item     = items_by_id_collection(item_ids).flatten.first
     return item
   end
-
-
-
-
 
 end
