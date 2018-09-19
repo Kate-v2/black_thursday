@@ -323,7 +323,7 @@ class SalesAnalyst
     invs = @invoices.find_all_by_merchant_id(merchant_id)
     inv_items = invs.map { |inv| invoice_items_of_successful_transactions(inv.id)}
     inv_items = inv_items.flatten.compact
-    groups = FinderClass.group_by(inv_items, :item_id)
+    groups    = invoice_items_grouped_by_item(inv_items)
     groups.each { |item_id, inv_items|
       groups[item_id] = sum(inv_items, :quantity)
     }
@@ -334,6 +334,11 @@ class SalesAnalyst
       @items.all.find_all { |item| item.id == id }
     }.flatten.uniq
     return items
+  end
+
+  #  TO DO - test me but already tested other places
+  def invoice_items_grouped_by_item(invoice_items)
+    FinderClass.group_by(invoice_items, :item_id)
   end
 
   def best_item_for_merchant(merchant_id)
