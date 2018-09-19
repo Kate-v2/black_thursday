@@ -270,28 +270,14 @@ class SalesAnalyst
   end
 
   def merchants_with_only_one_item
-    # groups = groups_of_merchant_items
-    # groups.each{ |id, items| groups[id] = items.count }
-    # ones = groups.find_all { |id, count| count == 1 }.to_h
-    # ids = ones.keys
     ids = single_item_merchant_pairs.keys
     merchs = ids.map { |id| @merchants.find_by_id(id) }
-    binding.pry
     return merchs
   end
 
   def merchants_with_only_one_item_registered_in_month(word)
     month = FinderClass.month_from_word(word).to_i
-    # months = @items.all.group_by { |item| item.updated_at.month }
-    # month_items = months[month]
-    # groups = month_items.group_by { |item| item.merchant_id }
-    # groups.each { |id, m_items| groups[id] = m_items.count }
-    # ones = groups.find_all { |id, count| count == 1 }.to_h
-    # ids = ones.keys
-    # merchants = ids.map { |id| @merchants.find_by_id(id) }
-    # === Above works but is a different iterpretation of statement =====
     shops = merchants_with_only_one_item
-    binding.pry
     groups = shops.group_by { |shop| shop.created_at.month }
     list = groups[month]
   end
@@ -304,7 +290,7 @@ class SalesAnalyst
     merch_invoices = @invoices.find_all_by_merchant_id(merchant_id)
     inv_ids = merch_invoices.map { |inv| inv.id }
     merch_items = inv_ids.map { |id| @invoice_items.find_all_by_invoice_id(id)}.flatten
-    
+
   end
 
   def best_item_for_merchant(merchant_id)
