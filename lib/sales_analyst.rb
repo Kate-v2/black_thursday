@@ -222,24 +222,47 @@ class SalesAnalyst
 
   # --- Merchant Revenue Analysis Methods ---
 
+  # TO DO - test me, but is tested other places
+  def merchants_by_id_collection(collection)
+    FinderClass.match_by_data(@merchants.all, collection, :id)
+  end
+
+  # TO DO - test me, but is tested other places
+  def invoices_by_id_collection(collection)
+    FinderClass.match_by_data(@invoices.all, collection, :id)
+  end
+
+  # TO DO - test me, but is tested other places
+  def invoice_items_by_id_collection(collection)
+    FinderClass.match_by_data(@invoice_items.all, collection, :id)
+  end
+
+  # TO DO - test me, but is tested other places
+  def items_by_id_collection(collection)
+    FinderClass.match_by_data(@items.all, collection, :id)
+  end
+
+  def totals_by_invoice_collection(invoice_ids)
+    invoice_ids.map{ |id| invoice_total(id) }
+  end
+
   def total_revenue_by_date(date)
     day_invoices = FinderClass.find_by_all_by_date(@invoices.all, :created_at, date)
     inv_ids      = FinderClass.make_array(day_invoices, :id).flatten
-    inv_costs    = inv_ids.map{ |id| invoice_total(id) }
+    inv_costs    = totals_by_invoice_collection(inv_ids)
     total        = sum(inv_costs)
   end
 
   def top_revenue_earners(x = 20)
-    hash = @invoices.all.group_by {|inv| inv.merchant_id}
+    hash = invoices_grouped_by_merchant
     hash.each { |id, invs|
-      inv_ids = invs.map { |inv| inv.id }
-      costs = inv_ids.map { |inv_id| invoice_total(inv_id) }
+      inv_ids = FinderClass.make_array(invs, :id)
+      costs = totals_by_invoice_collection(inv_ids)
       hash[id] = costs.compact
     }
-    hash.each { |id, costs| hash[id] = sum(costs)}
-    top = hash.max_by(x) { |key, cost| cost}.to_h
-    top_ids = top.keys
-    list = top_ids.map { |id| @merchants.find_by_id(id)}
+    hash.each { |id, costs| hash[id] = sum(costs) }
+    top_ids = hash.max_by(x) { |key, cost| cost}.to_h.keys
+    list = merchants_by_id_collection(top_ids)
   end
 
   def merchants_with_pending_invoices
@@ -251,9 +274,9 @@ class SalesAnalyst
     pending = @invoices.all.find_all { |invoice|
       successful_and_pending?(invoice.id)
     }
-    shops = pending.group_by{ |invoice| invoice.merchant_id }
+    shops = invoices_grouped_by_merchant
     merch_ids = shops.keys
-    merchants = merch_ids.map { |id| @merchants.find_by_id(id) }
+    merchants = merchants_by_id_collection(merch_ids)
   end
 
   def successful_and_pending?(invoice_id)
@@ -271,7 +294,7 @@ class SalesAnalyst
 
   def merchants_with_only_one_item
     ids = single_item_merchant_pairs.keys
-    merchs = ids.map { |id| @merchants.find_by_id(id) }
+    merchs = merchants_by_id_collection(ids)
     return merchs
   end
 
@@ -300,9 +323,9 @@ class SalesAnalyst
     invs = @invoices.find_all_by_merchant_id(merchant_id)
     inv_items = invs.map { |inv| invoice_items_of_successful_transactions(inv.id)}
     inv_items = inv_items.flatten.compact
-    groups = inv_items.group_by { |item| item.item_id  }
+    groups = FinderClass.group_by(inv_items, :item_id)
     groups.each { |item_id, inv_items|
-      groups[item_id] = inv_items.inject(0){ |sum, item| sum += item.quantity }
+      groups[item_id] = sum(inv_items, :quantity)
     }
     max_qty  = groups.values.max
     item_ids = groups.find_all { |item_id, qty| qty == max_qty }.to_h
