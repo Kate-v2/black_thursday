@@ -352,9 +352,7 @@ class SalesAnalyst
     max_qty  = groups.values.max
     item_ids = groups.find_all { |item_id, qty| qty == max_qty }.to_h
     item_ids = item_ids.keys
-    item    = item_ids.map { |id|
-      @items.all.find_all { |item| item.id == id }
-    }.flatten.first
+    item     = items_by_id_collection(item_ids).flatten.first
     return item
   end
 
