@@ -222,27 +222,27 @@ class SalesAnalyst
 
   # --- Merchant Revenue Analysis Methods ---
 
+  def totals_by_invoice_collection(invoice_ids)
+    invoice_ids.map{ |id| invoice_total(id) }
+  end
+
+
   def total_revenue_by_date(date)
     day_invoices = FinderClass.find_by_all_by_date(@invoices.all, :created_at, date)
     inv_ids      = FinderClass.make_array(day_invoices, :id).flatten
-    inv_costs    = inv_ids.map{ |id| invoice_total(id) }
+    inv_costs    = totals_by_invoice_collection(inv_ids)
     total        = sum(inv_costs)
   end
 
   def top_revenue_earners(x = 20)
-    # hash = @invoices.all.group_by {|inv| inv.merchant_id}
     hash = FinderClass.group_by(@invoices.all, :merchant_id)
     hash.each { |id, invs|
-      # inv_ids = invs.map { |inv| inv.id }
       inv_ids = FinderClass.make_array(invs, :id)
-      costs = inv_ids.map { |inv_id| invoice_total(inv_id) }
+      costs = totals_by_invoice_collection(inv_ids)
       hash[id] = costs.compact
     }
     hash.each { |id, costs| hash[id] = sum(costs) }
-    # top = hash.max_by(x) { |key, cost| cost}.to_h
-    # top_ids = top.keys
     top_ids = hash.max_by(x) { |key, cost| cost}.to_h.keys
-    # top_ids = top.keys
     list = top_ids.map { |id| @merchants.find_by_id(id)}
   end
 
