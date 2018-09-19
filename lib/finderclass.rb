@@ -1,5 +1,8 @@
 class FinderClass
 
+
+  # === Finding Management =================================
+
   def self.find_by(repo, method, data)
     repo.find {|object| object.send(method) == data }
   end # returns an object / the first object
@@ -40,15 +43,28 @@ class FinderClass
     }; return list
   end
 
+
+  # === Grouping Management =================================
+
   def self.group_by(collection, method)
     collection.group_by { |obj| obj.send(method) }
   end
+
+  def self.make_array(array, method)
+    array.inject([]) { |arr, obj| arr << obj.send(method) }
+  end
+
+
+  # === Matching Management =================================
 
   def self.match_by_data(repo, collection, method)
     collection.map { |data|
       repo.find_all { |obj| obj.send(method) == data }
     }.flatten
   end
+
+
+  # === Date Management =================================
 
   def self.day_of_week(integer)
     case integer
@@ -61,5 +77,38 @@ class FinderClass
     when 6; "Saturday"
     end
   end
+
+  def self.find_by_all_by_date(repo, method, date)
+    date = date_to_string(date)
+    date.class == Date ? date = date.to_s : date = date.to_s.split[0]
+    repo.find_all { |obj|
+      obj_date = obj.send(method)
+      obj_date = date_to_string(obj_date)
+      obj_date == date
+    }
+  end
+
+  def self.date_to_string(date)
+    date.class == Date ? date = date.to_s : date = date.to_s.split[0]
+  end
+
+  # TO DO - TEST ME
+  def self.month_from_word(word)
+    case word
+    when "January";   "01"
+    when "February";  "02"
+    when "March";     "03"
+    when "April";     "04"
+    when "May";       "05"
+    when "June";      "06"
+    when "July";      "07"
+    when "August";    "08"
+    when "September"; "09"
+    when "October";   "10"
+    when "November";  "11"
+    when "December";  "12"
+    end
+  end
+
 
 end

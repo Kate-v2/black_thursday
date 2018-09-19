@@ -47,6 +47,9 @@ class FinderClassTest < MiniTest::Test
 
   end
 
+
+  # === Finding Management =================================
+
   def test_it_finds_an_object_by_specific_column_data
     # --- Merchant Repo ---
     found = FinderClass.find_by(@merchants.all, :name, "Shopin1901")
@@ -157,21 +160,37 @@ class FinderClassTest < MiniTest::Test
     assert_equal found, found2
   end
 
+
+  # === Grouping Management =================================
+
   def test_it_can_group_by
     groups = FinderClass.group_by(@items.all, :merchant_id)
     assert_instance_of Hash, groups
-    assert_equal 12334141, groups.keys.first
+    assert_equal   12334141, groups.keys.first
     assert_instance_of Item, groups.values.first.first
   end
+
+  def test_it_can_make_an_array_based_on_a_passed_method
+    given = [ [1,2,3], [1], [1,2,3,4] ]
+    actual = FinderClass.make_array(given, :count)
+    expected = [3, 1, 4]
+    assert_equal expected, actual
+  end
+
+
+  # === Matching Management =================================
 
   def test_it_can_match_by_data
     ids = [12334105, 12334112]
     matches = FinderClass.match_by_data(@merchants.all, ids, :id)
-    assert_instance_of Array, matches
+    assert_instance_of Array,    matches
     assert_instance_of Merchant, matches.first
-    assert_equal 2, matches.count
+    assert_equal 2,        matches.count
     assert_equal 12334105, matches.first.id
   end
+
+
+  # === Date Management =================================
 
   def test_it_can_convert_an_integer_day_of_week_to_the_word
     assert_equal "Sunday",    FinderClass.day_of_week(0)
@@ -182,4 +201,30 @@ class FinderClassTest < MiniTest::Test
     assert_equal "Friday",    FinderClass.day_of_week(5)
     assert_equal "Saturday",  FinderClass.day_of_week(6)
   end
+
+  def test_it_can_find_all_by_date
+    # --- items ---
+    # "2016-01-11 09:34:06 UTC"
+    # --- handles a date ---
+    date = "2016-01-11"
+    found = FinderClass.find_by_all_by_date(@items.all, :created_at, date)
+    assert_instance_of Array, found
+    assert_instance_of Item,  found.first
+    # --- handles a time ---
+    date = "2016-01-11 09:34:06 UTC"
+    found = FinderClass.find_by_all_by_date(@items.all, :created_at, date)
+    assert_instance_of Array, found
+    assert_instance_of Item,  found.first
+  end
+
+  def test_it_can_make_a_date_string
+    time = Time.now
+    time_string = time.to_s.split[0]
+    assert_equal time_string, FinderClass.date_to_string(time)
+    date = Date.today
+    date_string = date.to_s
+    assert_equal date_string, FinderClass.date_to_string(date)
+  end
+
+
 end
