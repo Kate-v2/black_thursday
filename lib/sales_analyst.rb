@@ -31,9 +31,17 @@ class SalesAnalyst
     values  = data.inject([]) {|arr, val| arr << val.send(rule_method) }
   end
 
-  def sum(values)
-    sum = values.inject(0) { |total, val| total += val.to_f }
-  end   # returns an rounded float
+  # def sum(values)
+  #   sum = values.inject(0) { |total, val| total += val.to_f }
+  # end   # returns an rounded float
+
+  # TO DO - Test the method part
+  def sum(values, method = nil)
+    values.inject(0) { |total, val|
+      val = val.send(method) if method
+      total += val
+     }
+   end
 
   def average(values, ct = values.count)
     sum     = sum(values)
