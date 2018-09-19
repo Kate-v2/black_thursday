@@ -24,13 +24,6 @@ class SalesAnalyst
 
   # --- General Methods ---
 
-  # Lets wait to see if this is useful in the other iterations
-    #  we can use it in the Item Repo Analysis
-  def create_values_array(hash, hash_method, rule_method)
-    data    = hash.send(hash_method)
-    values  = data.inject([]) {|arr, val| arr << val.send(rule_method) }
-  end
-
   # TO DO - Test the method part
   def sum(values, method = nil)
     values.inject(0) { |total, val|
@@ -98,10 +91,8 @@ class SalesAnalyst
   end
 
   def merchant_store_item_counts(groups)
-    # vals = groups.values.inject([]) { |arr, shop| arr << shop.count }
     vals = FinderClass.make_array(groups.values, :count)
   end
-
 
   def average_items_per_merchant
     groups = merchant_stores
@@ -135,7 +126,6 @@ class SalesAnalyst
 
   def average_average_price_per_merchant
     repo     = @merchants.all
-    # ids      = repo.map { |merch| merch.id }
     ids      = FinderClass.make_array(repo, :id)
     averages = ids.map { |id| average_item_price_for_merchant(id) }
     mean     = average(averages).round(2)
@@ -143,7 +133,6 @@ class SalesAnalyst
   end   # returns a big decimal
 
   def golden_items # items with prices above 2 std of average price
-    # prices   = @items.all.map{ |item| item.unit_price }
     prices   = FinderClass.make_array(@items.all, :unit_price)
     above    = find_exceptional(@items.all, prices, 2, :unit_price)
   end
@@ -190,7 +179,6 @@ class SalesAnalyst
 
   def top_days_by_invoice_count
     groups = @invoices.all.group_by { |invoice| invoice.created_at.wday}
-    # values = groups.map { |day, inv| inv.count }
     values = FinderClass.make_array(groups.values, :count)
     top = find_exceptional(groups, values, 1, :count)
     top_as_word = top.keys.map { |day| FinderClass.day_of_week(day) }
@@ -226,5 +214,11 @@ class SalesAnalyst
     end
   end
 
+
+  # --- Merchant Revenue Analysis Methods ---
+
+  def total_revenue_by_date(date)
+    
+  end
 
 end

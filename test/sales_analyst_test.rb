@@ -60,10 +60,6 @@ class SalesAnalystTest < Minitest::Test
 
   # --- General Methods ---
 
-  def test_it_can_create_an_array_of_values
-    # Lets wait to see if this is useful in the other iterations
-  end
-
   def test_it_can_sum_values
     assert_equal 10.0, @sa_csv.sum([1, 2, 3, 4])
   end
@@ -309,6 +305,8 @@ class SalesAnalystTest < Minitest::Test
     assert_equal 21067.77, @sa_csv.invoice_total(id)
   end
 
+
+  # --- Merchant Revenue Analysis Methods ---
 
 
 end

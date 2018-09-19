@@ -190,5 +190,29 @@ class FinderClassTest < MiniTest::Test
     assert_equal expected, actual
   end
 
+  def test_it_can_find_all_by_date
+    # --- items ---
+    # "2016-01-11 09:34:06 UTC"
+    # --- handles a date ---
+    date = "2016-01-11"
+    found = FinderClass.find_by_all_by_date(@items.all, :created_at, date)
+    assert_instance_of Array, found
+    assert_instance_of Item, found.first
+    # --- handles a time ---
+    date = "2016-01-11 09:34:06 UTC"
+    found = FinderClass.find_by_all_by_date(@items.all, :created_at, date)
+    assert_instance_of Array, found
+    assert_instance_of Item, found.first
+  end
+
+  def test_it_can_make_a_date_string
+    time = Time.now
+    time_string = time.to_s.split[0]
+    assert_equal time_string, FinderClass.date_to_string(time)
+    date = Date.today
+    date_string = date.to_s
+    assert_equal date_string, FinderClass.date_to_string(date)
+  end
+
 
 end
