@@ -113,7 +113,8 @@ class SalesAnalyst
     values    = merchant_store_item_counts(groups)
     all_above = find_exceptional(groups, values, 1, :count)
     merch_ids = all_above.keys
-    list      = FinderClass.match_by_data(@merchants.all, merch_ids, :id)
+    # list      = FinderClass.match_by_data(@merchants.all, merch_ids, :id)
+    list      = merchants_by_id_collection(merch_ids)
     return list
   end
 
@@ -161,32 +162,34 @@ class SalesAnalyst
   end
 
   def top_merchants_by_invoice_count  # two standard deviations above the mean
-    groups = invoices_grouped_by_merchant
-    counts = invoice_counts_per_merchant
-    top = find_exceptional(groups, counts, 2, :count)
-    merch_ids = top.keys
-    top_merchants = FinderClass.match_by_data(@merchants.all, merch_ids, :id )
+    groups        = invoices_grouped_by_merchant
+    counts        = invoice_counts_per_merchant
+    top           = find_exceptional(groups, counts, 2, :count)
+    merch_ids     = top.keys
+    # top_merchants = FinderClass.match_by_data(@merchants.all, merch_ids, :id )
+    top_merchants = merchants_by_id_collection(merch_ids)
 
   end
 
   def bottom_merchants_by_invoice_count  # two standard deviations below the mean
-    groups = invoices_grouped_by_merchant
-    counts = invoice_counts_per_merchant
-    worst = find_exceptional(groups, counts, -2, :count)
-    merch_ids = worst.keys
-    bottom_merchants = FinderClass.match_by_data(@merchants.all, merch_ids, :id )
+    groups           = invoices_grouped_by_merchant
+    counts           = invoice_counts_per_merchant
+    worst            = find_exceptional(groups, counts, -2, :count)
+    merch_ids        = worst.keys
+    # bottom_merchants = FinderClass.match_by_data(@merchants.all, merch_ids, :id)
+    bottom_merchants = merchants_by_id_collection(merch_ids)
   end
 
   def top_days_by_invoice_count
-    groups = @invoices.all.group_by { |invoice| invoice.created_at.wday}
-    values = FinderClass.make_array(groups.values, :count)
-    top = find_exceptional(groups, values, 1, :count)
+    groups      = @invoices.all.group_by { |invoice| invoice.created_at.wday}
+    values      = FinderClass.make_array(groups.values, :count)
+    top         = find_exceptional(groups, values, 1, :count)
     top_as_word = top.keys.map { |day| FinderClass.day_of_week(day) }
   end
 
   def invoice_status(status)
-    all = @invoices.all.count.to_f
-    found = @invoices.find_all_by_status(status).count
+    all     = @invoices.all.count.to_f
+    found   = @invoices.find_all_by_status(status).count
     percent = percentage(found, all).round(2)
   end
 
@@ -199,14 +202,14 @@ class SalesAnalyst
   end
 
   def invoice_items_of_successful_transactions(invoice_id)
-    sold = invoice_paid_in_full?(invoice_id)
+    sold             = invoice_paid_in_full?(invoice_id)
     items_by_invoice = @invoice_items.find_all_by_invoice_id(invoice_id) if sold
   end
 
   def invoice_total(invoice_id)
     items_by_invoice = invoice_items_of_successful_transactions(invoice_id)
     if items_by_invoice
-      sum = items_by_invoice.inject(0) { |sum, item|
+      sum    = items_by_invoice.inject(0) { |sum, item|
         cost = revenue(item)
         sum += cost
       }
@@ -289,7 +292,6 @@ class SalesAnalyst
   def single_item_merchant_pairs
     groups = merchant_stores
     groups.each{ |id, items| groups[id] = items.count }
-    # groups = merchant_stores.each{ |id, items| groups[id] = items.count }
     ones   = groups.find_all { |id, count| count == 1 }.to_h
   end
 
