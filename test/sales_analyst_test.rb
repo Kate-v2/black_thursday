@@ -314,19 +314,19 @@ class SalesAnalystTest < Minitest::Test
   #   assert_equal 21067.77, revenue
   # end
   #
-  # def test_it_gets_the_top_x_or_20_merchants_by_revenue
-  #   # --- default count ---
-  #   top = @sa_csv.top_revenue_earners
-  #   assert_instance_of Array, top
-  #   assert_equal 20, top.count
-  #   assert_instance_of Merchant, top.first
-  #   # --- custom count ---
-  #   skip
-  #   top = @sa_csv.top_revenue_earners(40)
-  #   assert_instance_of Array, top
-  #   assert_equal 40, top.count
-  #   assert_instance_of Merchant, top.first
-  # end
+  def test_it_gets_the_top_x_or_20_merchants_by_revenue
+    # --- default count ---
+    top = @sa_csv.top_revenue_earners
+    assert_instance_of Array, top
+    assert_equal 20, top.count
+    assert_instance_of Merchant, top.first
+    # --- custom count ---
+    skip
+    top = @sa_csv.top_revenue_earners(40)
+    assert_instance_of Array, top
+    assert_equal 40, top.count
+    assert_instance_of Merchant, top.first
+  end
   #
   # def test_it_gets_all_merchants_with_pending_invoices
   #   skip
@@ -347,15 +347,29 @@ class SalesAnalystTest < Minitest::Test
   #   actual = @sa_csv.successful_and_pending?(1)
   #   assert_equal true, actual
   # end
+  #
+  # def test_it_gets_single_item_merchant_pairs
+  #   actual = @sa_csv.single_item_merchant_pairs
+  #   assert_instance_of Hash, actual
+  #   assert_operator 1, :<, actual.keys.first
+  #   all_ones = actual.values.all?{ |val| val == 1 }
+  #   assert_equal true, all_ones
+  # end
+
+  # def test_it_gets_merchants_with_only_one_item
+  #   # uses single merchant pairs
+  #   actual = @sa_csv.merchants_with_only_one_item
+  #   assert_instance_of Array, actual
+  #   all_merch = actual.all?{ |val| val.class == Merchant }
+  #   assert_equal true, all_merch
+  # end
 
 
-  def test_it_gets_single_item_merchant_pairs
-    actual = @sa_csv.single_item_merchant_pairs
-    assert_instance_of Hash, actual
-    assert_operator 1, :<, actual.keys.first
-    all_ones = actual.values.all?{ |val| val == 1 }
-    assert_equal true, all_ones
-  end
+
+
+
+
+
 
 
 

@@ -230,15 +230,19 @@ class SalesAnalyst
   end
 
   def top_revenue_earners(x = 20)
-    hash = @invoices.all.group_by {|inv| inv.merchant_id}
+    # hash = @invoices.all.group_by {|inv| inv.merchant_id}
+    hash = FinderClass.group_by(@invoices.all, :merchant_id)
     hash.each { |id, invs|
-      inv_ids = invs.map { |inv| inv.id }
+      # inv_ids = invs.map { |inv| inv.id }
+      inv_ids = FinderClass.make_array(invs, :id)
       costs = inv_ids.map { |inv_id| invoice_total(inv_id) }
       hash[id] = costs.compact
     }
-    hash.each { |id, costs| hash[id] = sum(costs)}
-    top = hash.max_by(x) { |key, cost| cost}.to_h
-    top_ids = top.keys
+    hash.each { |id, costs| hash[id] = sum(costs) }
+    # top = hash.max_by(x) { |key, cost| cost}.to_h
+    # top_ids = top.keys
+    top_ids = hash.max_by(x) { |key, cost| cost}.to_h.keys
+    # top_ids = top.keys
     list = top_ids.map { |id| @merchants.find_by_id(id)}
   end
 
