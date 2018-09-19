@@ -218,7 +218,15 @@ class SalesAnalyst
   # --- Merchant Revenue Analysis Methods ---
 
   def total_revenue_by_date(date)
-    
+    day_invoices = FinderClass.find_by_all_by_date(@invoices.all, :created_at, date)
+    inv_ids      = FinderClass.make_array(day_invoices, :id).flatten
+    inv_costs    = inv_ids.map{ |id| invoice_total(id) } #.compact!
+    total        = sum(inv_costs)
   end
+
+
+
+
+
 
 end
