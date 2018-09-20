@@ -337,19 +337,31 @@ class SalesAnalystTest < Minitest::Test
   end
 
   def test_it_gets_all_merchants_with_pending_invoices
-    skip
     expected = 467
-    # current output (via success & pending) is 393
-    # output by only pending was 448   (this was uniq)
-    actual = @sa_csv.merchants_with_pending_invoices
-    assert_instance_of Array, actual
+    actual   = @sa_csv.merchants_with_pending_invoices
+    assert_instance_of Array,    actual
     assert_instance_of Merchant, actual.first
-    assert_operator @merchants.all.count, :>, actual.count
+    assert_operator @sa_csv.merchants.all.count, :>, actual.count
+    skip
+    @sa_csv.quick_stats
   end
 
-  def test_it_determines_if_an_invoice_is_successful_and_pending
-    actual = @sa_csv.successful_and_pending?(1)
-    assert_equal true, actual
+  def test_it_finds_merchants_with_all_failed_transactions
+    actual = @sa_csv.merchants_with_all_failed_transactions
+    assert_instance_of Array,      actual
+    assert_operator 12334105, :<=, actual.first
+  end
+
+  def test_it_finds_invoices_with_all_failed_transactions
+    actual = @sa_csv.invoices_with_all_failed_transactions
+    assert_instance_of Array,      actual
+    assert_operator 4985, :>=,     actual.first
+  end
+
+  def test_if_finds_merchants_without_transactions
+    actual = @sa_csv.merchants_without_transactions
+    assert_instance_of Array,      actual
+    assert_operator 12334105, :<=, actual.first
   end
 
   def test_it_gets_single_item_merchant_pairs
