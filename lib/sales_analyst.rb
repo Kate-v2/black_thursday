@@ -1,8 +1,16 @@
 require 'pry'
 
 require_relative 'finderclass'
+require_relative 'quick_stats'
+require_relative 'sa_math'
+require_relative 'sa_collections'
 
 class SalesAnalyst
+  include QuickStats
+  include SAMath
+  include SACollections
+
+
 
   attr_reader :merchants,
               :items,
@@ -22,77 +30,8 @@ class SalesAnalyst
     @customers     = @engine.customers
   end
 
-  # --- General Methods ---
-
-  # TO DO - Test the method part
-  def sum(values, method = nil)
-    values.inject(0) { |total, val|
-      val = val.send(method) if method
-      total += val
-     }
-   end
-
-  def average(values, ct = values.count)
-    sum     = sum(values)
-    ct      = ct.to_f
-    average = (sum / ct)
-  end   # returns an unrounded float
-
-  def percentage(fraction, all)
-    (fraction / all.to_f ) * 100
-  end
-
-  def standard_deviation(values, mean) # Explicit steps
-    floats      = values.map     { |val| val.to_f   }
-    difference  = floats.map     { |val| val - mean }
-    values      = difference.map { |val| val ** 2   }
-    sample_ct   = (values.count - 1)
-    div         = average(values, sample_ct)
-    sqrt        = Math.sqrt(div)
-    return sqrt.round(2)
-  end   # returns float rounded to 2 places
-
-  def standard_dev_measure(values, above_or_below, std = nil)
-    mean = average(values)
-    std == nil ? std = standard_deviation(values, mean) : std
-    outside_this = mean + (std * above_or_below)
-  end # returns a float
-
-  def find_exceptional(collection, values, stds, method)
-    case collection
-    when Hash;  exceptional_from_hash(collection, values, stds, method)
-    when Array; exceptional_from_array(collection, values, stds, method)
-    end
-  end
-
-  def exceptional_from_hash(collection, values, stds, method)
-    stds > 0 ? operator = :> : operator = :<
-    std_limit = standard_dev_measure(values, stds)
-    list = collection.find_all {|key, value|
-      value.send(method).send(operator, std_limit)
-    }.to_h
-    return list
-  end
-
-  def exceptional_from_array(collection, values, stds, method)
-    stds > 0 ? operator = :> : operator = :<
-    std_limit = standard_dev_measure(values, stds)
-    list = collection.find_all {|object|
-      object.send(method).send(operator, std_limit)
-    }
-    return list
-  end
-
 
   # --- Item Repo Analysis Methods ---
-
-  def merchant_stores
-    groups = FinderClass.group_by(@items.all, :merchant_id)
-  end
-
-  def merchant_store_item_counts(groups)
-    vals = FinderClass.make_array(groups.values, :count)
-  end
 
   def average_items_per_merchant
     groups = merchant_stores
@@ -139,10 +78,6 @@ class SalesAnalyst
 
 
   # --- Invoice Repo Analysis Methods ---
-
-  def invoices_grouped_by_merchant
-    groups = FinderClass.group_by(@invoices.all, :merchant_id)
-  end
 
   def invoice_counts_per_merchant
     groups = invoices_grouped_by_merchant
@@ -217,26 +152,6 @@ class SalesAnalyst
 
   # --- Merchant Revenue Analysis Methods ---
 
-  # TO DO - test me, but is tested other places
-  def merchants_by_id_collection(collection)
-    FinderClass.match_by_data(@merchants.all, collection, :id)
-  end
-
-  # TO DO - test me, but is tested other places
-  def invoices_by_id_collection(collection)
-    FinderClass.match_by_data(@invoices.all, collection, :id)
-  end
-
-  # TO DO - test me, but is tested other places
-  def invoice_items_by_id_collection(collection)
-    FinderClass.match_by_data(@invoice_items.all, collection, :id)
-  end
-
-  # TO DO - test me, but is tested other places
-  def items_by_id_collection(collection)
-    FinderClass.match_by_data(@items.all, collection, :id)
-  end
-
   def totals_by_invoice_collection(invoice_ids)
     invoice_ids.map{ |id| invoice_total(id) }
   end
@@ -273,21 +188,26 @@ class SalesAnalyst
   #   merchants = merchants_by_id_collection(merch_ids)
   # end
 
+  # ===========================================
+  # ===========================================
+  # ===========================================
+  # TO DO - COMMENT THIS OUT
+  def quick_stats
+    puts ""
+    merchant_stats
+  end
+  # ===========================================
+  # ===========================================
+  # ===========================================
+
   # FAILED - 385 / 467 -- Find by Has Transaction and is failed Transaction
   # def merchants_with_pending_invoices
   #   failed    = @transactions.all.find_all { |trans| trans.result == :failed }
-  #   inv_ids    = FinderClass.group_by(failed, :invoice_id).keys
+  #   inv_ids   = FinderClass.group_by(failed, :invoice_id).keys
   #   invs      = invoices_by_id_collection(inv_ids)
   #   merch_ids = FinderClass.group_by(invs, :merchant_id).keys
   #   merchs    = merchants_by_id_collection(merch_ids)
   # end
-
-  def successful_and_pending?(invoice_id)
-    success = invoice_paid_in_full?(invoice_id)
-    invoice = @invoices.find_by_id(invoice_id)
-    pending = invoice.status == :pending
-    success && pending
-  end
 
   def single_item_merchant_pairs
     groups = merchant_stores
@@ -298,7 +218,6 @@ class SalesAnalyst
   def merchants_with_only_one_item
     ids    = single_item_merchant_pairs.keys
     merchs = merchants_by_id_collection(ids)
-    # return merchs
   end
 
   def merchants_with_only_one_item_registered_in_month(word)
@@ -312,7 +231,6 @@ class SalesAnalyst
     merch_invs = @invoices.find_all_by_merchant_id(merchant_id)
     inv_items  = merch_invs.map { |inv| invoice_total(inv.id) }.compact
     sum        = sum(inv_items)
-    # return sum
   end
 
   def merchants_ranked_by_revenue
@@ -320,11 +238,6 @@ class SalesAnalyst
     count  = ranked.count
     sorted = ranked.max_by(count) { |rev, merch| rev }.to_h
     sorted = sorted.values.flatten
-  end
-
-  #  TO DO - test me but already tested other places
-  def invoice_items_grouped_by_item(invoice_items)
-    FinderClass.group_by(invoice_items, :item_id)
   end
 
   # TO DO - Test Me
@@ -349,7 +262,6 @@ class SalesAnalyst
     item_ids  = groups.find_all { |item_id, qty| qty == max_qty }.to_h
     item_ids  = item_ids.keys
     items     = items_by_id_collection(item_ids).flatten.uniq
-    # return items
   end
 
   # TO DO - Test Me
@@ -369,7 +281,6 @@ class SalesAnalyst
     item_ids  = groups.find_all { |item_id, qty| qty == max_qty }.to_h
     item_ids  = item_ids.keys
     item      = items_by_id_collection(item_ids).flatten.first
-    # return item
   end
 
 end
