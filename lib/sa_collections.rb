@@ -51,5 +51,13 @@ module SACollections
   end
 
 
+  def all_transactions_by_invoice_id
+    FinderClass.group_by(@transactions.all, :invoice_id)
+  end
+
+  def collection_by_merchant_id(collection)
+    FinderClass.group_by(collection, :merchant_id)
+  end
+
 
 end

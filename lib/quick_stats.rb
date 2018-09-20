@@ -1,157 +1,222 @@
 require 'pry'
 
 
+# How do you test a module in another file ?
+
 module QuickStats
   def merchant_stats
-    puts "all merchants:      "    + @merchants.all.count.to_s
-    merchants_by_invoice_status
-    merchants_by_transaction_result
-    merchants_with_success_or_pending
-    merchants_with_failure_or_pending
-    merchants_with_success_and_pending
-    merchants_with_failure_and_pending
-    merchants_with_transactions
-    merchants_with_invoices
-    invoices_with_all_failed_transactions
-    invoices_with_all_success_transactions
-    invoices_without_transactions
-  end
-
-  def invoices_without_transactions
-    inv_ids = @transactions.all.group_by { |t| t.invoice_id}.keys
-    other_ids = @invoices.all.find_all { |inv| inv_ids.include?(inv.id) == false  }
-    merch_ids = other_ids.group_by { |inv| inv.merchant_id }.keys
-    ct = merch_ids.count
-    puts "Invoices without Trans:    " + ct.to_s
-  end
-
-  def invoices_with_all_success_transactions
-    groups = @transactions.all.group_by { |t| t.invoice_id}
-    groups.each { |inv_id, trans| groups[inv_id] = trans.map { |t| t.result } }
-    failed  = groups.find_all { |inv_id, results|
-      results.all?{ |r| r == :success } }.to_h
-    inv_ids = failed.keys
-    invs = invoices_by_id_collection(inv_ids)
-    pairs = invs.group_by { |inv| inv.merchant_id }
-    merch_ids = pairs.keys
-    ct = merch_ids.count
-    puts "invoices all success t:    " + ct.to_s
-    puts "interesting that this is 4 above target and 4 below all"
+    puts "     FIND ME  467"
+    puts "all merchants: "    + @merchants.all.count.to_s
+    puts "                -" + (475-467).to_s
+    print_merchants_with_only_one_status
+    print_merchants_with_only_one_result
+    print_merchants_with_sales
+    print_invoice_transactions
+    print_invoices_with_failed_transactions
+    print_missing_vs_failed
   end
 
 
-
-  def invoices_with_all_failed_transactions
-    groups = @transactions.all.group_by { |t| t.invoice_id}
-    groups.each { |inv_id, trans| groups[inv_id] = trans.map { |t| t.result } }
-    failed  = groups.find_all { |inv_id, results|
-      results.all?{ |r| r == :failed } }.to_h
-    inv_ids = failed.keys
-    invs = invoices_by_id_collection(inv_ids)
-    pairs = invs.group_by { |inv| inv.merchant_id }
-    merch_ids = pairs.keys
-    ct = merch_ids.count
-    puts "invoices all failed t:     " + ct.to_s
+# ---- Only One Status -------------------------------------------
+  def print_merchants_with_only_one_status
+    pending  = merchants_with_only_invoice(:pending).count.to_s
+    shipped  = merchants_with_only_invoice(:shipped).count.to_s
+    returned = merchants_with_only_invoice(:returned).count.to_s
+    puts "only pending:      " + pending
+    puts "only shipped:      " + shipped
+    puts "only returned:     " + returned
   end
 
+  def merchants_with_only_invoice(status)
+    groups = invoice_statuses_by_merchants
+    only = groups.find_all { |merch_id, stats|
+      collection_all_same_status?(stats, status)
+    }.to_h.keys
+  end
+
+  def invoice_statuses_by_merchants
+    groups = invoices_grouped_by_merchant
+    groups.each { |merch_id, invoices|
+      groups[merch_id] = invoice_statuses_from_collection(invoices)
+    }; return groups
+  end
+
+  def collection_all_same_status?(collection, status)
+    collection.all?{ |stat| stat == status }
+  end
+
+  def invoice_statuses_from_collection(invoices)
+    invoices.map {|inv| inv.status }
+  end
+
+
+  # ---- Only One Result -------------------------------------------
+
+  def print_merchants_with_only_one_result
+    success  = merchants_with_only_transaction(:success).count.to_s
+    failed   = merchants_with_only_transaction(:failed).count.to_s
+    puts "only success:        " + success
+    puts "only failed:         " + failed
+  end
+
+  def merchants_with_only_transaction(result)
+    groups = transactions_results_by_merchant
+    only = groups.find_all { |inv_id, res|
+      res = res.flatten
+      collection_all_same_result?(res, result)
+    }.to_h.keys
+  end
+
+  def transactions_results_by_merchant
+    groups = transactions_by_merchant
+    groups.each { |merch_id, trans|
+      groups[merch_id] = trans.map { |t| t.result }
+    }; return groups
+  end
+
+  def transactions_by_merchant
+    groups = all_transactions_by_invoice_id               # inv_id   => [results]
+    invoices = invoices_by_id_collection(groups.keys)     # merch_id => [invoices]
+    sets = FinderClass.group_by(invoices, :merchant_id)
+    sets.each { |merch_id, invoices|
+      sets[merch_id] = invoices.map { |inv| groups[inv.id] }.flatten
+     };return sets   # merch_id => [transactions]
+  end
+
+  def transaction_results_by_invoices
+    groups = all_transactions_by_invoice_id
+    groups.each { |inv_id, trans|
+      groups[inv_id] = transaction_results_from_collection(trans)
+    }; return groups
+  end
+
+  def collection_all_same_result?(collection, result)
+    collection.all?{ |res| res == result }
+  end
+
+  def transaction_results_from_collection(transactions)
+    transactions.map {|trans| trans.result}
+  end
+
+
+  # ---- All Merchants have -------------------------------------------
 
   def merchants_with_invoices
-    groups = @invoices.all.group_by { |inv| inv.merchant_id }
-    ct = groups.keys.count
-    puts "with invoices:             " + ct.to_s
+    groups    = invoices_grouped_by_merchant
+    merch_ids = groups.keys
   end
 
 
   def merchants_with_transactions
-    groups = @transactions.all.group_by { |t| t.invoice_id}
-    inv_ids = groups.keys
-    invs = invoices_by_id_collection(inv_ids)
-    pairs = invs.group_by{ |inv| inv.merchant_id}
-    ct = pairs.keys.count
-    puts "with transactions:         " + ct.to_s
+    groups = transactions_by_merchant
+    merch_ids = groups.keys
   end
 
-  def merchants_with_success_or_pending
-    success_ids = find_transactions_by_status(:success)
-    pending_ids = find_invoices_by_status(:pending)
-    all = success_ids + pending_ids
-    ct = all.uniq.count
-    puts "pending or success:        " + ct.to_s
-  end
-
-  def merchants_with_failure_or_pending
-    success_ids = find_transactions_by_status(:failed)
-    pending_ids = find_invoices_by_status(:pending)
-    all = success_ids + pending_ids
-    ct = all.uniq.count
-    puts "pending or failed:         " + ct.to_s
-  end
-
-  def merchants_with_success_and_pending
-    success_ids = find_transactions_by_status(:success)
-    pending_ids = find_invoices_by_status(:pending)
-    combo = success_ids + pending_ids
-    all   = combo.find_all { |id|
-      success_ids.include?(id) && pending_ids.include?(id)  }
-    ct = all.uniq.count
-    puts "pending and success:       " + ct.to_s
-  end
-
-  def merchants_with_failure_and_pending
-    success_ids = find_transactions_by_status(:failed)
-    pending_ids = find_invoices_by_status(:pending)
-    combo = success_ids + pending_ids
-    all   = combo.find_all { |id|
-      success_ids.include?(id) && pending_ids.include?(id)  }
-    ct = all.uniq.count
-    puts "pending and failed:        " + ct.to_s
+  def print_merchants_with_sales
+    invoices    = merchants_with_invoices.count.to_s
+    tranactions = merchants_with_transactions.count.to_s
+    puts "with invoices:             " + invoices
+    puts "with transactions:         " + tranactions
   end
 
 
-  def merchants_by_transaction_result
-    # puts "all transactions: " + @transactions.all.count.to_s
-    success = find_transactions_by_status(:success).count
-    failed  = find_transactions_by_status(:failed).count
-    puts "all by t success:          "  + success.to_s
-    puts "all by t failed:           "   + failed.to_s
+  # ---- Missing -------------------------------------------
+
+  def print_invoice_transactions
+    without = invoices_have_transactions(false)
+    with    = invoices_have_transactions(true)
+    merchants_without = collection_by_merchant_id(without).keys.count.to_s
+    merchants_with    = collection_by_merchant_id(with).keys.count.to_s
+    without = without.count.to_s
+    with    = with.count.to_s
+    puts "all invoices:              " + @invoices.all.count.to_s
+    puts "Invoices without Trans:    " + without
+    puts "   those merchants:      "   + merchants_without
+    puts "Invoices with    Trans:    " + with
+    puts "   those merchants:      "   + merchants_with
   end
 
-  # Name BAD - returns merchant ids
-  def find_transactions_by_status(result)
-    by_stat = @transactions.all.find_all { |t| t.result == result }
-    inv_ids = by_stat.group_by { |t| t.invoice_id }
-    ids     = inv_ids.keys
-    invs    = ids.map { |id| @invoices.find_by_id(id) }.flatten
-    pairs   = invs.group_by { |inv| inv.merchant_id }
-    merch_ids = pairs.keys
+  def invoices_have_transactions(bool)
+    inv_ids   = all_transactions_by_invoice_id.keys
+    other_ids = @invoices.all.find_all { |inv| inv_ids.include?(inv.id) == bool }
   end
 
-  def merchants_by_invoice_status
-    pending  = find_invoices_by_status(:pending).count
-    shipped  = find_invoices_by_status(:shipped).count
-    returned = find_invoices_by_status(:returned).count
-    puts "all by pending:            "  + pending.to_s
-    puts "all by shipped:            "   + shipped.to_s
-    puts "all by returned:           "  + returned.to_s
+
+  # ---- Invoices with Failed T -----------------------------
+
+  def print_invoices_with_failed_transactions
+    all = invoices_with_all_failed_transactions.count.to_s
+    any = invoices_with_any_failed_transactions.count.to_s
+    all_merch = merchants_with_all_failed_transactions.count.to_s
+    any_merch = merchants_with_any_failed_transactions.count.to_s
+    puts "invoices with all failed t " + all
+    puts "   those merchants:      "   + all_merch
+    puts "invoices with any failed t " + any
+    puts "   those merchants:      "   + any_merch
+
   end
 
-  # Name BAD - returns merchant ids
-  def find_invoices_by_status(status)
-    invoices = invoices_grouped_by_merchant
-    pairs = invoices.find_all { |merch_id, invs|
-      invs.any?{ |inv| inv.status == status }
-    }.to_h
-    merch_ids = pairs.keys
+  def invoices_with_all_failed_transactions
+    results = transaction_results_by_invoices
+    inv_ids = results.find_all { |inv_id, results|
+      results.all?{ |res| res == :failed }
+    }.to_h.keys.uniq
   end
 
-  def successful_and_pending?(invoice_id)
-    success = invoice_paid_in_full?(invoice_id)
-    invoice = @invoices.find_by_id(invoice_id)
-    pending = invoice.status == :pending
-    success && pending
+  def invoices_with_any_failed_transactions
+    results = transaction_results_by_invoices
+    inv_ids = results.find_all { |inv_id, results|
+      results.any?{ |res| res == :failed }
+    }.to_h.keys.uniq
+  end
+
+  def merchants_with_all_failed_transactions
+    inv_ids   = invoices_with_all_failed_transactions
+    invs      = inv_ids.map { |id| @invoices.find_by_id(id) }
+    merch_ids = collection_by_merchant_id(invs).keys
+  end
+
+  def merchants_with_any_failed_transactions
+    inv_ids   = invoices_with_any_failed_transactions
+    invs      = inv_ids.map { |id| @invoices.find_by_id(id) }
+    merch_ids = collection_by_merchant_id(invs).keys
   end
 
 
 
+  # ---- Missing vs failed -------------------------------------------
+
+  def print_missing_vs_failed
+    both    = failed_and_missing.count.to_s
+    either  = failed_or_missing.count.to_s
+    puts "failed and missing:         " + both
+    puts "failed or missing:          " + either
+    puts "  BINGO failed or missing!  "
+  end
+
+  def invoice_ids_without_trans
+    without = invoices_have_transactions(false)
+    without = without.map { |inv| inv.id }
+  end
+
+  def merchants_without_transactions
+    invs = invoices_have_transactions(false)
+    collection_by_merchant_id(invs).keys
+  end
+
+  def failed_and_missing
+    failed  = merchants_with_all_failed_transactions
+    missing = merchants_without_transactions
+    combo   = [failed, missing].flatten.uniq
+    both    = combo.find_all { |id|
+      failed.include?(id) && missing.include?(id)
+     }
+  end
+
+  def failed_or_missing
+    failed  = merchants_with_all_failed_transactions
+    missing = merchants_without_transactions
+    combo   = [failed, missing].flatten.uniq
+  end
 
 end

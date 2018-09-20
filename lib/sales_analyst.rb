@@ -149,7 +149,6 @@ class SalesAnalyst
   end
 
 
-
   # --- Merchant Revenue Analysis Methods ---
 
   def totals_by_invoice_collection(invoice_ids)
@@ -174,40 +173,38 @@ class SalesAnalyst
     list       = merchants_by_id_collection(top_ids)
   end
 
-  # def merchants_with_pending_invoices
-  #   # pending = @invoices.find_all_by_status(:pending)
-  #   # inv_ids = pending.map { |inv| inv.id }
-  #   # successful = inv_ids.find_all { |id| invoice_paid_in_full?(id) }
-  #   # ids = successful.map {|id| .merchant_id }.uniq
-  #   # merchants = ids.map { |id| @merchants.find_by_id(id) }
-  #   pending = @invoices.all.find_all { |invoice|
-  #     successful_and_pending?(invoice.id)
-  #   }
-  #   shops = invoices_grouped_by_merchant
-  #   merch_ids = shops.keys
-  #   merchants = merchants_by_id_collection(merch_ids)
-  # end
 
-  # ===========================================
-  # ===========================================
-  # ===========================================
-  # TO DO - COMMENT THIS OUT
+  # Call to see how merchants_with_pending_invoices was determined
+  # uses QuickStats  -- how do you test these outside SalesAnalystTest ?
   def quick_stats
-    puts ""
-    merchant_stats
+    puts ""; merchant_stats
   end
-  # ===========================================
-  # ===========================================
-  # ===========================================
 
-  # FAILED - 385 / 467 -- Find by Has Transaction and is failed Transaction
-  # def merchants_with_pending_invoices
-  #   failed    = @transactions.all.find_all { |trans| trans.result == :failed }
-  #   inv_ids   = FinderClass.group_by(failed, :invoice_id).keys
-  #   invs      = invoices_by_id_collection(inv_ids)
-  #   merch_ids = FinderClass.group_by(invs, :merchant_id).keys
-  #   merchs    = merchants_by_id_collection(merch_ids)
-  # end
+  # via invoices that don't have transactions or have all failed tranactions
+  def merchants_with_pending_invoices
+    failed    = merchants_with_all_failed_transactions
+    missing   = merchants_without_transactions
+    combo     = [failed, missing].flatten.uniq
+    merchants = combo.map { |id| @merchants.find_by_id(id) }
+  end
+
+  def merchants_with_all_failed_transactions
+    inv_ids   = invoices_with_all_failed_transactions
+    invs      = inv_ids.map { |id| @invoices.find_by_id(id) }
+    merch_ids = collection_by_merchant_id(invs).keys
+  end
+
+  def invoices_with_all_failed_transactions
+    results = transaction_results_by_invoices
+    inv_ids = results.find_all { |inv_id, results|
+      results.all?{ |res| res == :failed }
+    }.to_h.keys.uniq
+  end
+
+  def merchants_without_transactions
+    invs = invoices_have_transactions(false)
+    collection_by_merchant_id(invs).keys
+  end
 
   def single_item_merchant_pairs
     groups = merchant_stores
