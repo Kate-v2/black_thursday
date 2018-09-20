@@ -252,8 +252,6 @@ class SalesAnalyst
     hash       = invoices_grouped_by_merchant
     hash.each { |id, invs|
       inv_ids  = FinderClass.make_array(invs, :id)
-      # costs    = totals_by_invoice_collection(inv_ids)
-      # hash[id] = costs.compact
       hash[id] = totals_by_invoice_collection(inv_ids).compact
     }
     hash.each { |id, costs| hash[id] = sum(costs) }
@@ -261,19 +259,28 @@ class SalesAnalyst
     list       = merchants_by_id_collection(top_ids)
   end
 
-  def merchants_with_pending_invoices
-    # pending = @invoices.find_all_by_status(:pending)
-    # inv_ids = pending.map { |inv| inv.id }
-    # successful = inv_ids.find_all { |id| invoice_paid_in_full?(id) }
-    # ids = successful.map {|id| .merchant_id }.uniq
-    # merchants = ids.map { |id| @merchants.find_by_id(id) }
-    pending = @invoices.all.find_all { |invoice|
-      successful_and_pending?(invoice.id)
-    }
-    shops = invoices_grouped_by_merchant
-    merch_ids = shops.keys
-    merchants = merchants_by_id_collection(merch_ids)
-  end
+  # def merchants_with_pending_invoices
+  #   # pending = @invoices.find_all_by_status(:pending)
+  #   # inv_ids = pending.map { |inv| inv.id }
+  #   # successful = inv_ids.find_all { |id| invoice_paid_in_full?(id) }
+  #   # ids = successful.map {|id| .merchant_id }.uniq
+  #   # merchants = ids.map { |id| @merchants.find_by_id(id) }
+  #   pending = @invoices.all.find_all { |invoice|
+  #     successful_and_pending?(invoice.id)
+  #   }
+  #   shops = invoices_grouped_by_merchant
+  #   merch_ids = shops.keys
+  #   merchants = merchants_by_id_collection(merch_ids)
+  # end
+
+  # FAILED - 385 / 467 -- Find by Has Transaction and is failed Transaction
+  # def merchants_with_pending_invoices
+  #   failed    = @transactions.all.find_all { |trans| trans.result == :failed }
+  #   inv_ids    = FinderClass.group_by(failed, :invoice_id).keys
+  #   invs      = invoices_by_id_collection(inv_ids)
+  #   merch_ids = FinderClass.group_by(invs, :merchant_id).keys
+  #   merchs    = merchants_by_id_collection(merch_ids)
+  # end
 
   def successful_and_pending?(invoice_id)
     success = invoice_paid_in_full?(invoice_id)
